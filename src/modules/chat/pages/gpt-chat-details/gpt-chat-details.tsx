@@ -1,31 +1,8 @@
 import { useState, useRef, useEffect, JSX } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
-import { Textarea } from '@/components/ui-kit/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui-kit/select';
-import {
-  Search,
-  Paperclip,
-  ArrowUp,
-  Mic,
-  Plus,
-  Globe,
-  FileImage,
-  Video,
-  Bot,
-  User,
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
-  RotateCcw,
-  Check,
-} from 'lucide-react';
+import { Bot, User, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check } from 'lucide-react';
+import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 
 interface Message {
   id: string;
@@ -37,133 +14,55 @@ interface Message {
 export const GptChatPageDetails = () => {
   const { chatId } = useParams();
   const [message, setMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-3-flash');
   const [messages, setMessages] = useState<Message[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const storedMessages = localStorage.getItem(`chat-${chatId}`);
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
-    } else {
-      const dummyMessages: Message[] = [
-        {
-          id: '1',
-          role: 'user',
-          content: 'How can I build a REST API with Node.js and Express?',
-          timestamp: new Date(Date.now() - 3600000),
-        },
-        {
-          id: '2',
-          role: 'assistant',
-          content: `To build a REST API with Node.js and Express, follow these steps:
+    const initialMessage = localStorage.getItem(`chat-initial-${chatId}`);
+    if (initialMessage) {
+      localStorage.removeItem(`chat-initial-${chatId}`);
 
-1. **Initialize your project:**
-\`\`\`bash
-npm init -y
-npm install express
-\`\`\`
+      const userMessage: Message = {
+        id: '1',
+        role: 'user',
+        content: initialMessage,
+        timestamp: new Date(),
+      };
 
-2. **Create a basic server:**
+      const aiResponse: Message = {
+        id: '2',
+        role: 'assistant',
+        content: `I understand you're asking about: "${initialMessage}"
+
+Let me help you with that. Here's a comprehensive response:
+
+**Key Points:**
+1. This is a generated response based on your question
+2. In a real application, this would be connected to an AI model
+3. The response would be context-aware and helpful
+
+**Example Code:**
 \`\`\`javascript
-const express = require('express');
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
-
-app.get('/api/users', (req, res) => {
-  res.json({ users: ['Alice', 'Bob', 'Charlie'] });
-});
-
-app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
-});
-\`\`\`
-
-3. **Add more routes:**
-- GET for retrieving data
-- POST for creating data
-- PUT/PATCH for updating data
-- DELETE for removing data
-
-4. **Best practices:**
-- Use middleware for validation
-- Implement error handling
-- Add authentication
-- Use environment variables
-
-Would you like me to elaborate on any of these steps?`,
-          timestamp: new Date(Date.now() - 3500000),
-        },
-        {
-          id: '3',
-          role: 'user',
-          content: 'Yes, can you show me how to add authentication with JWT?',
-          timestamp: new Date(Date.now() - 3400000),
-        },
-        {
-          id: '4',
-          role: 'assistant',
-          content: `Sure! Here's how to implement JWT authentication:
-
-1. **Install required packages:**
-\`\`\`bash
-npm install jsonwebtoken bcryptjs
-\`\`\`
-
-2. **Create authentication middleware:**
-\`\`\`javascript
-const jwt = require('jsonwebtoken');
-
-const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Access denied' });
-  }
-  
-  try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid token' });
-  }
+const example = () => {
+  console.log('This is a sample code block');
+  return 'Success!';
 };
 \`\`\`
 
-3. **Create login route:**
-\`\`\`javascript
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  // Verify user credentials (example)
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ error: 'User not found' });
-  
-  const validPassword = await bcrypt.compare(password, user.password);
-  if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
-  
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-  res.json({ token });
-});
-\`\`\`
+Is there anything specific you'd like me to elaborate on?`,
+        timestamp: new Date(Date.now() + 1000),
+      };
 
-4. **Protect routes:**
-\`\`\`javascript
-app.get('/api/protected', authMiddleware, (req, res) => {
-  res.json({ message: 'This is a protected route', user: req.user });
-});
-\`\`\`
+      const initialMessages = [userMessage, aiResponse];
+      setMessages(initialMessages);
+      localStorage.setItem(`chat-${chatId}`, JSON.stringify(initialMessages));
+      return;
+    }
 
-This gives you a basic JWT authentication system!`,
-          timestamp: new Date(Date.now() - 3300000),
-        },
-      ];
-      setMessages(dummyMessages);
-      localStorage.setItem(`chat-${chatId}`, JSON.stringify(dummyMessages));
+    const storedMessages = localStorage.getItem(`chat-${chatId}`);
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
     }
   }, [chatId]);
 
@@ -172,38 +71,26 @@ This gives you a basic JWT authentication system!`,
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: message,
-        timestamp: new Date(),
-      };
+    if (!message.trim()) return;
 
-      const updatedMessages = [...messages, newMessage];
-      setMessages(updatedMessages);
-      localStorage.setItem(`chat-${chatId}`, JSON.stringify(updatedMessages));
-      setMessage('');
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
 
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `I received your message: "${message}". This is a demo response. In a real application, this would be processed by an AI model.`,
-          timestamp: new Date(),
-        };
-        const finalMessages = [...updatedMessages, assistantMessage];
-        setMessages(finalMessages);
-        localStorage.setItem(`chat-${chatId}`, JSON.stringify(finalMessages));
-      }, 1000);
-    }
-  };
+    const aiResponse: Message = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: `This is a sample AI response to: "${message}". In a real application, this would be generated by an AI model based on the user's input and conversation context.`,
+      timestamp: new Date(Date.now() + 1000),
+    };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    const updatedMessages = [...messages, userMessage, aiResponse];
+    setMessages(updatedMessages);
+    localStorage.setItem(`chat-${chatId}`, JSON.stringify(updatedMessages));
+    setMessage('');
   };
 
   const handleCopy = (content: string, messageId: string) => {
@@ -424,120 +311,13 @@ This gives you a basic JWT authentication system!`,
           <div ref={messagesEndRef} />
         </div>
       </div>
+      {/* Bottom Toolbar */}
 
-      <div className="border-t border-border/50 bg-gradient-to-b from-background/95 to-card/95 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border-2 border-border hover:border-primary/30 focus-within:border-primary/50 transition-all duration-300 shadow-xl shadow-black/5">
-            {/* Textarea */}
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Ask me anything..."
-              className="min-h-[80px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-16 px-6 py-5 text-base placeholder:text-muted-foreground/60"
-            />
-
-            {/* Send Button */}
-            <div className="absolute bottom-[72px] right-4">
-              <Button
-                size="icon"
-                className={`h-10 w-10 rounded-2xl transition-all duration-300 ${
-                  message.trim()
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:scale-110'
-                    : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }`}
-                onClick={handleSendMessage}
-                disabled={!message.trim()}
-              >
-                <ArrowUp className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Bottom Toolbar */}
-            <div className="flex items-center justify-between px-6 pb-4 pt-2 border-t border-border/50">
-              {/* Left Side - Model Selector & Tools */}
-              <div className="flex items-center gap-2">
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="w-[180px] h-9 border-0 bg-muted/50 hover:bg-muted rounded-xl text-sm transition-colors">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gemini-3-flash">Gemini 3 Flash</SelectItem>
-                    <SelectItem value="deepseek-v3">deepseek-v3.1:671b</SelectItem>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="claude-3">Claude 3</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Right Side - Additional Actions */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Globe className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <FileImage className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Video className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:scale-105"
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Helper Text */}
-          <p className="text-xs text-center text-muted-foreground/70 mt-3">
-            Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">Enter</kbd> to send,{' '}
-            <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">Shift+Enter</kbd> for new line
-          </p>
-        </div>
-      </div>
+      <GptChatInput
+        message={message}
+        onMessageChange={setMessage}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   );
 };

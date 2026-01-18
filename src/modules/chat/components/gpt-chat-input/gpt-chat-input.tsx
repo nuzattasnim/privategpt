@@ -32,7 +32,6 @@ export const GptChatInput = ({
     <div className="flex-shrink-0 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto px-4 py-4">
         <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border-2 border-border hover:border-primary/30 focus-within:border-primary/50 transition-all duration-300 shadow-xl shadow-black/5">
-          {/* Textarea */}
           <Textarea
             value={message}
             onChange={(e) => onMessageChange(e.target.value)}
@@ -42,7 +41,6 @@ export const GptChatInput = ({
             className="min-h-[80px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-16 px-6 py-5 text-base placeholder:text-muted-foreground/60"
           />
 
-          {/* Send Button */}
           <div className="absolute bottom-[72px] right-4">
             <Button
               size="icon"
@@ -58,9 +56,7 @@ export const GptChatInput = ({
             </Button>
           </div>
 
-          {/* Bottom Toolbar */}
           <div className="flex items-center justify-between px-6 pb-4 pt-2 border-t border-border/50">
-            {/* Left Side - Model Selector & Tools */}
             <div className="flex items-center gap-2">
               <GroupedModelSelector value={selectedModel} onChange={setSelectedModel} />
 
@@ -81,7 +77,6 @@ export const GptChatInput = ({
               </Button>
             </div>
 
-            {/* Right Side - Additional Actions */}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -126,7 +121,6 @@ export const GptChatInput = ({
           </div>
         </div>
 
-        {/* Helper Text */}
         <p className="text-xs text-center text-muted-foreground/70 mt-3">
           Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">Enter</kbd> to send,{' '}
           <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">Shift+Enter</kbd> for new line

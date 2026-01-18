@@ -15,7 +15,7 @@ import {
   MapPin,
   Globe,
 } from 'lucide-react';
-import { GptChatInput } from '@/modules/gpt-chats/components/gpt-chat-input/gpt-chat-input';
+import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 
 const categoryPrompts: Record<
   string,

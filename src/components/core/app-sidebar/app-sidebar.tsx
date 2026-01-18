@@ -1,32 +1,30 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@/components/ui-kit/sidebar';
 import { useTheme } from '@/styles/theme/theme-provider';
 import { getSidebarStyle } from '@/lib/utils/sidebar-utils';
-import { useFilteredMenu } from '@/hooks/use-filtered-menu';
-import { LogoSection, MenuSection } from '@/components/core';
-import { menuItems } from '@/constant/sidebar-menu';
+import { LogoSection, NewChatButton, ChatHistoryGroupComponent } from '@/components/core';
+import { useChatHistory } from '@/hooks/use-chat-history';
 
 /**
  * AppSidebar Component
  *
- * A responsive, collapsible sidebar navigation component that displays application menu items
- * organized into integrated and design-only categories.
+ * A responsive, collapsible sidebar navigation component that displays dynamic chat history
+ * similar to ChatGPT's interface.
  *
  * Features:
  * - Collapsible sidebar with smooth transition animations
  * - Different logos for expanded and collapsed states
  * - Auto-collapses on mobile when route changes
- * - Separates menu items into categorized sections
- * - Highlights active navigation items based on current route
+ * - Dynamic chat history grouped by time periods (Today, Yesterday, etc.)
+ * - New chat button for creating new conversations
+ * - Highlights active chat based on current route
  * - Supports both icon-only and icon-with-text display modes
  *
  * Dependencies:
  * - Requires useSidebar context for controlling sidebar state
  * - Uses React Router's useLocation for active item highlighting
- * - Consumes menuItems data structure for navigation options
- * - Uses custom SidebarMenuItemComponent for rendering individual menu items
+ * - Uses useChatHistory hook for managing chat history data
  *
  * @example
  * // Basic usage in layout component
@@ -47,13 +45,9 @@ import { menuItems } from '@/constant/sidebar-menu';
 export const AppSidebar = () => {
   const { theme } = useTheme();
   const { pathname } = useLocation();
-  const { t } = useTranslation();
   const { setOpenMobile, open, isMobile, openMobile } = useSidebar();
 
-  const filteredMenuItems = useFilteredMenu(menuItems);
-
-  const integratedMenuItems = filteredMenuItems.filter((item) => item.isIntegrated === true);
-  const designOnlyMenuItems = filteredMenuItems.filter((item) => item.isIntegrated !== true);
+  const { groupedChatHistory, isLoading, deleteChat, createNewChat } = useChatHistory();
 
   useEffect(() => {
     if (!isMobile) {
@@ -83,21 +77,24 @@ export const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent className="text-base ml-4 mr-2 my-3 text-high-emphasis font-normal overflow-x-hidden">
-        <MenuSection
-          title={t('CLOUD_INTEGRATED')}
-          items={integratedMenuItems}
-          showText={open || isMobile}
-          pathname={pathname}
-          onItemClick={isMobile ? () => setOpenMobile(false) : undefined}
-        />
+        <div className="px-2">
+          <NewChatButton onNewChat={createNewChat} />
+        </div>
 
-        <MenuSection
-          title={t('DESIGN_ONLY')}
-          items={designOnlyMenuItems}
-          showText={open || isMobile}
-          pathname={pathname}
-          onItemClick={isMobile ? () => setOpenMobile(false) : undefined}
-        />
+        {isLoading ? (
+          <div className="px-2 py-4 text-sm text-medium-emphasis">Loading chat history...</div>
+        ) : (
+          <>
+            {groupedChatHistory.map((group) => (
+              <ChatHistoryGroupComponent
+                key={group.label}
+                group={group}
+                onDelete={deleteChat}
+                showText={open || isMobile}
+              />
+            ))}
+          </>
+        )}
       </SidebarContent>
     </Sidebar>
   );

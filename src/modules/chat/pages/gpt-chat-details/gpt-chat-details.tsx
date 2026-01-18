@@ -212,9 +212,9 @@ Is there anything specific you'd like me to elaborate on?`,
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-b from-background to-muted/20">
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <div className="flex flex-col h-screen w-full bg-gradient-to-b from-background to-muted/20 overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <div className="max-w-4xl mx-auto px-4 py-8 pb-4 space-y-6">
           {messages.map((msg) => (
             <div
               key={msg.id}

@@ -32,8 +32,8 @@ export const GptChatInput = ({
   };
 
   return (
-    <div className="border-t border-border/50 bg-gradient-to-b from-background/95 to-card/95 backdrop-blur-xl">
-      <div className="max-w-5xl mx-auto px-4 py-4">
+    <div className="flex-shrink-0 border-t border-border/50 bg-gradient-to-b from-background/95 to-card/95 backdrop-blur-xl">
+      <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border-2 border-border hover:border-primary/30 focus-within:border-primary/50 transition-all duration-300 shadow-xl shadow-black/5">
           <Textarea
             value={message}

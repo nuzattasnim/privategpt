@@ -63,11 +63,17 @@ export const AppSidebar = () => {
 
   return (
     <Sidebar
-      className={`bg-card h-full ${isMobile ? 'mobile-sidebar' : ''}`}
+      className={`bg-gradient-to-b from-card to-card/95 h-full border-r border-border/50 backdrop-blur-xl ${
+        isMobile ? 'mobile-sidebar' : ''
+      }`}
       collapsible={isMobile ? 'none' : 'icon'}
       style={sidebarStyle}
     >
-      <SidebarHeader className={`${!open && !isMobile ? 'border-b' : ''} p-2`}>
+      <SidebarHeader
+        className={`${
+          !open && !isMobile ? 'border-b border-border/50' : ''
+        } p-3 bg-gradient-to-b from-background/50 to-transparent`}
+      >
         <LogoSection
           theme={theme}
           open={open}
@@ -76,24 +82,32 @@ export const AppSidebar = () => {
         />
       </SidebarHeader>
 
-      <SidebarContent className="text-base ml-4 mr-2 my-3 text-high-emphasis font-normal overflow-x-hidden">
-        <div className="px-2">
-          <NewChatButton onNewChat={createNewChat} />
+      <SidebarContent className="text-base mx-3 my-4 text-high-emphasis font-normal overflow-x-hidden">
+        <div className="px-1 mb-4">
+          <NewChatButton onNewChat={createNewChat} showText={open || isMobile} />
         </div>
 
         {isLoading ? (
-          <div className="px-2 py-4 text-sm text-medium-emphasis">Loading chat history...</div>
+          <div className="px-3 py-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" />
+              <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+              <div className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+              <span className="ml-2">Loading chats...</span>
+            </div>
+          </div>
         ) : (
-          <>
-            {groupedChatHistory.map((group) => (
+          <div className="space-y-6">
+            {groupedChatHistory.map((group, index) => (
               <ChatHistoryGroupComponent
                 key={group.label}
                 group={group}
                 onDelete={deleteChat}
                 showText={open || isMobile}
+                index={index}
               />
             ))}
-          </>
+          </div>
         )}
       </SidebarContent>
     </Sidebar>

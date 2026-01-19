@@ -44,7 +44,7 @@ export const GptChatInput = ({
             className="min-h-[80px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-16 px-6 py-5 text-base placeholder:text-muted-foreground/60"
           />
 
-          <div className="absolute bottom-[72px] right-4">
+          <div className="absolute bottom-[75px] right-4">
             <Button
               size="icon"
               className={`h-10 w-10 rounded-2xl transition-all duration-300 ${
@@ -59,7 +59,7 @@ export const GptChatInput = ({
             </Button>
           </div>
 
-          <div className="flex items-center justify-between px-6 pb-4 pt-2 border-t border-border/50">
+          <div className="flex items-center justify-between px-6 pb-3 pt-2 border-t border-border/50">
             <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>

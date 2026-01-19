@@ -30,7 +30,7 @@ export const GptChatInput = ({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-10 ${state === 'collapsed' ? 'ml-16' : 'ml-60'}`}
+      className={`fixed bottom-0 left-0 right-0 z-10 transition-all duration-300 ${state === 'collapsed' ? 'ml-16' : 'ml-60'}`}
     >
       <div className="max-w-5xl mx-auto  pb-4 backdrop-blur-xl rounded-3xl">
         <div className="relative bg-card/80 backdrop-blur-sm rounded-3xl border-2 border-border hover:border-primary focus-within:border-primary transition-all duration-300 shadow-xl shadow-black/5">

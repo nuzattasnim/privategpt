@@ -5,6 +5,30 @@ import { Bot, User, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check } from 'lucide-
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 
+const ThinkingIndicator = () => (
+  <div className="flex gap-4 animate-in fade-in duration-300">
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+      <Bot className="h-4 w-4 text-white" />
+    </div>
+    <div className="flex-1 py-3">
+      <div className="flex items-center gap-1">
+        <div
+          className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
+          style={{ animationDelay: '0ms' }}
+        />
+        <div
+          className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
+          style={{ animationDelay: '150ms' }}
+        />
+        <div
+          className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
+          style={{ animationDelay: '300ms' }}
+        />
+      </div>
+    </div>
+  </div>
+);
+
 export const GptChatPageDetails = () => {
   const { chatId } = useParams();
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -55,30 +79,6 @@ export const GptChatPageDetails = () => {
       </div>
     );
   };
-
-  const ThinkingIndicator = () => (
-    <div className="flex gap-4 animate-in fade-in duration-300">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-        <Bot className="h-4 w-4 text-white" />
-      </div>
-      <div className="flex-1 py-3">
-        <div className="flex items-center gap-1">
-          <div
-            className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
-            style={{ animationDelay: '0ms' }}
-          />
-          <div
-            className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
-            style={{ animationDelay: '150ms' }}
-          />
-          <div
-            className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
-            style={{ animationDelay: '300ms' }}
-          />
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="flex flex-col h-screen w-full bg-background">

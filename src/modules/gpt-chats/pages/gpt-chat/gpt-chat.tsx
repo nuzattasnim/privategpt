@@ -20,25 +20,29 @@ import { GptChatInput } from '@/modules/gpt-chats/components/gpt-chat-input/gpt-
 
 const categoryPrompts: Record<
   string,
-  Array<{ icon: LucideIcon; title: string; description: string }>
+  Array<{ icon: LucideIcon; title: string; description: string; id: string }>
 > = {
   create: [
     {
+      id: '1',
       icon: Paintbrush,
       title: 'Design a landing page',
       description: 'for a sustainable fashion brand',
     },
     {
+      id: '2',
       icon: Sparkles,
       title: 'Write a creative story',
       description: 'about time travel and friendship',
     },
     {
+      id: '3',
       icon: Zap,
       title: 'Generate marketing copy',
       description: 'for a new AI productivity tool',
     },
     {
+      id: '4',
       icon: Lightbulb,
       title: 'Brainstorm startup ideas',
       description: 'in the climate tech space',
@@ -46,21 +50,25 @@ const categoryPrompts: Record<
   ],
   explore: [
     {
+      id: '5',
       icon: MapPin,
       title: 'Plan a 2-week trip',
       description: 'to Japan with cultural highlights',
     },
     {
+      id: '6',
       icon: Compass,
       title: 'Discover hidden gems',
       description: 'in European architecture',
     },
     {
+      id: '7',
       icon: Globe,
       title: 'Compare different cultures',
       description: 'approach to work-life balance',
     },
     {
+      id: '8',
       icon: Sparkles,
       title: 'Explore future trends',
       description: 'in renewable energy',
@@ -68,21 +76,25 @@ const categoryPrompts: Record<
   ],
   code: [
     {
+      id: '9',
       icon: Code,
       title: 'Build a REST API',
       description: 'with Node.js and Express',
     },
     {
+      id: '10',
       icon: Database,
       title: 'Optimize SQL queries',
       description: 'for better performance',
     },
     {
+      id: '11',
       icon: Zap,
       title: 'Debug React component',
       description: 'with rendering issues',
     },
     {
+      id: '12',
       icon: Code,
       title: 'Implement authentication',
       description: 'using JWT and refresh tokens',
@@ -90,21 +102,25 @@ const categoryPrompts: Record<
   ],
   learn: [
     {
+      id: '13',
       icon: GraduationCap,
       title: "Beginner's guide to TypeScript",
       description: 'with practical examples',
     },
     {
+      id: '14',
       icon: BookOpen,
       title: 'Explain the CAP theorem',
       description: 'in distributed systems',
     },
     {
+      id: '15',
       icon: Lightbulb,
       title: 'Why is AI so expensive?',
       description: 'Break down the costs',
     },
     {
+      id: '16',
       icon: Sparkles,
       title: 'Are black holes real?',
       description: 'Explore the science behind them',
@@ -171,11 +187,11 @@ export const GptChatPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mb-8">
-          {categoryPrompts[selectedCategory].map((prompt, index) => {
+          {categoryPrompts[selectedCategory].map((prompt) => {
             const PromptIcon = prompt.icon;
             return (
               <button
-                key={index}
+                key={prompt.id}
                 onClick={() => handlePromptClick(prompt)}
                 className="group relative overflow-hidden text-left p-5 rounded-2xl border-2 border-border bg-card/50 backdrop-blur-sm hover:bg-accent/50  transition-all duration-300   hover:-translate-y-1"
               >

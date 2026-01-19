@@ -4,6 +4,7 @@ import { Button } from '@/components/ui-kit/button';
 import { Bot, User, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check } from 'lucide-react';
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
+import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
 
 const ThinkingIndicator = () => (
   <div className="flex gap-4 animate-in fade-in duration-300">
@@ -72,7 +73,7 @@ export const GptChatPageDetails = () => {
   const renderMessageContent = (content: string, isStreaming = false) => {
     return (
       <div className="text-[15px]">
-        {content}
+        <MarkdownRenderer content={content} />
         {isStreaming && (
           <span className="inline-block w-1.5 h-5 bg-foreground ml-0.5 animate-pulse" />
         )}

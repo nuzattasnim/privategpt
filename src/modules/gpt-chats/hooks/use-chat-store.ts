@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { Conversation } from '../types/conversation.service.type';
 
 type MessageType = 'user' | 'bot';
 
@@ -40,6 +41,7 @@ interface ChatStore {
     };
   };
   initiateChat: (chatId: string, message: string) => void;
+  loadChat: (chatId: string, conversations: Conversation[]) => void;
   setSessionId: (chatId: string, id: string) => void;
   addUserMessage: (chatId: string, message: string) => void;
   initiateBotMessage: (chatId: string, chunk: string) => void;
@@ -51,6 +53,7 @@ interface ChatStore {
   setBotThinking: (chatId: string, thinking: boolean) => void;
   setCurrentEvent: (chatId: string, eventType: string | null, message: string) => void;
   deleteChat: (chatId: string) => void;
+  reset: () => void;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -76,6 +79,38 @@ export const useChatStore = create<ChatStore>()(
                 ],
                 isBotThinking: true,
                 pendingSend: true,
+                lastUpdated: new Date().toISOString(),
+              },
+            },
+          };
+        }),
+
+      loadChat: (chatId, conversations) =>
+        set((state) => {
+          const chat = state.chats[chatId] || { ...chatDefaultValue, id: chatId };
+          const chatConversations: ChatMessage[] = conversations.flatMap((conversation) => {
+            return [
+              {
+                message: conversation.Query,
+                type: 'user',
+                streaming: false,
+                timestamp: conversation.QueryTimestamp,
+              },
+              {
+                message: conversation.Response,
+                type: 'bot',
+                streaming: false,
+                timestamp: conversation.ResponseTimestamp,
+              },
+            ];
+          });
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: {
+                ...chat,
+                sessionId: conversations[0].SessionId,
+                conversations: chatConversations,
                 lastUpdated: new Date().toISOString(),
               },
             },
@@ -325,6 +360,10 @@ export const useChatStore = create<ChatStore>()(
             chats: updatedChats,
           };
         }),
+      reset: () => {
+        console.log('Resetting chat store');
+        set({ chats: {} });
+      },
     }),
     {
       name: 'selise-blocks-chatbot-store',

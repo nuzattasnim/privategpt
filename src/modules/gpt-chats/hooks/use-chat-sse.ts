@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { onlineManager } from '@tanstack/react-query';
 import { useChatStore } from './use-chat-store';
 import { getRandomEventMessage } from '../utils/chat-event-messages';
 import { parseSSEBuffer } from '../utils/parse-sse';
 import { parseChatMessage } from '../utils/json-utils';
 import { conversationService } from '../services/conversation.service';
+import { useGetConversationById } from './use-conversation-api';
 
 interface UseChatSSE {
   chatId?: string;
@@ -275,14 +276,35 @@ export const handleSSEMessage = (
   }
 };
 
+const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
+const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
+
 export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const { chats, addUserMessage, setBotThinking, setCurrentEvent } = useChatStore();
+  const { chats, addUserMessage, setBotThinking, setCurrentEvent, loadChat } = useChatStore();
   const sessionId = chats[chatId]?.sessionId || '';
   const conversations = chats[chatId]?.conversations || [];
   const isBotStreaming = chats[chatId]?.isBotStreaming || false;
   const isBotThinking = chats[chatId]?.isBotThinking || false;
   const isPendingSend = chats[chatId]?.pendingSend || false;
+
+  const { data, isFetched } = useGetConversationById({
+    allow_created_by_filter: true,
+    call_from: projectSlug,
+    project_key: projectKey,
+    session_id: chatId,
+    limit: 100,
+    offset: 0,
+  });
+
+  useEffect(() => {
+    if (chatId && isFetched && data) {
+      if (data.total_count > 0) {
+        const conversationData = data.sessions;
+        loadChat(chatId, conversationData);
+      }
+    }
+  }, [chatId, data, isFetched, loadChat]);
 
   const generateBotMessage = useCallback(
     async (data: { message: string }) => {
@@ -301,7 +323,7 @@ export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
           enable_next_suggestion: false,
           response_type: 'text',
           response_format: 'string',
-          call_from: 'web',
+          call_from: projectSlug,
         });
 
         const decoder = new TextDecoder();

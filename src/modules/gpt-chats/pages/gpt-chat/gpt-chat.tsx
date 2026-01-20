@@ -154,8 +154,8 @@ export const GptChatPage = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-b from-background to-muted/20 overflow-y-auto pb-[220px] sm:pb-[200px] md:pb-[180px]">
-      <div className="flex-1 flex flex-col items-center justify-start px-4 max-w-5xl mx-auto w-full pt-6 sm:pt-12 md:pt-16">
-        <div className="text-center mb-4 sm:mb-6 space-y-1 sm:space-y-2">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 max-w-5xl mx-auto w-full py-4">
+        <div className="text-center mb-6 sm:mb-8 md:mb-10 space-y-1 sm:space-y-2">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             How can I help you today?
           </h1>
@@ -165,7 +165,7 @@ export const GptChatPage = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 md:mb-10 flex-wrap">
           {categories.map((category) => {
             const Icon = category.icon;
             const isActive = selectedCategory === category.id;

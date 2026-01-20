@@ -5,6 +5,7 @@ import { Bot, User, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check } from 'lucide-
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
+import { ChatEventMessage } from '../../utils/chat-event-messages';
 
 const ThinkingIndicator = () => (
   <div className="flex gap-4 animate-in fade-in duration-300">
@@ -30,19 +31,35 @@ const ThinkingIndicator = () => (
   </div>
 );
 
+const ChatEventMessageIndicator = ({ message }: { message: string }) => (
+  <div className="flex gap-4 animate-in fade-in duration-300">
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+      <Bot className="h-4 w-4 text-white" />
+    </div>
+    <div className="flex-1 py-3">
+      <ChatEventMessage message={message} />
+    </div>
+  </div>
+);
+
 export const GptChatPageDetails = () => {
   const { chatId } = useParams();
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
-  const { sendMessage, conversations, isBotStreaming, isBotThinking, generateBotMessage } =
-    useChatSSE({ chatId });
+  const {
+    sendMessage,
+    conversations,
+    isBotStreaming,
+    isBotThinking,
+    generateBotMessage,
+    currentEvent,
+  } = useChatSSE({ chatId });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, isBotThinking]);
 
-  // Auto-send the first message if chat was just created
   useEffect(() => {
     if (chatId && !hasInitialized.current) {
       const lastMessage = conversations[conversations.length - 1];
@@ -148,7 +165,11 @@ export const GptChatPageDetails = () => {
             </div>
           ))}
 
-          {isBotThinking && <ThinkingIndicator />}
+          {isBotThinking && currentEvent && (
+            <ChatEventMessageIndicator message={currentEvent.message} />
+          )}
+
+          {isBotThinking && !currentEvent && <ThinkingIndicator />}
 
           <div ref={messagesEndRef} />
         </div>

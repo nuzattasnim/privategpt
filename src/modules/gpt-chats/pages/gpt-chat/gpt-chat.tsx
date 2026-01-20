@@ -153,17 +153,17 @@ export const GptChatPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-b from-background to-muted/20">
-      <div className="flex-1 flex flex-col items-center justify-center px-4 max-w-5xl mx-auto w-full py-8">
-        <div className="text-center mb-12 space-y-2">
-          <h1 className="text-4xl md:text-5xl font-bold  bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+    <div className="flex flex-col h-full w-full bg-gradient-to-b from-background to-muted/20 overflow-y-auto pb-64">
+      <div className="flex-1 flex flex-col items-center justify-start px-4 max-w-5xl mx-auto w-full pt-20">
+        <div className="text-center mb-6 space-y-2">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             How can I help you today?
           </h1>
-          <p className="text-muted-foreground text-lg">Choose a category to get started</p>
+          <p className="text-muted-foreground text-base">Choose a category to get started</p>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex items-center justify-center gap-3 mb-10">
+        <div className="flex items-center justify-center gap-3 mb-6">
           {categories.map((category) => {
             const Icon = category.icon;
             const isActive = selectedCategory === category.id;
@@ -186,7 +186,7 @@ export const GptChatPage = () => {
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mb-6">
           {categoryPrompts[selectedCategory].map((prompt) => {
             const PromptIcon = prompt.icon;
             return (

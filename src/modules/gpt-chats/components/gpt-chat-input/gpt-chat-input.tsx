@@ -43,7 +43,7 @@ export const GptChatInput = ({
         state === 'collapsed' ? 'md:ml-16' : 'md:ml-60'
       }`}
     >
-      <div className="w-full max-w-3xl xl:max-w-5xl mx-auto px-4 pb-4  backdrop-blur-xl">
+      <div className="w-full max-w-3xl xl:max-w-5xl mx-auto px-4 pb-4  bg-background">
         <div className="relative bg-card/80  rounded-3xl border-2 border-border hover:border-primary focus-within:border-primary transition-all duration-300 ">
           <Textarea
             value={message}

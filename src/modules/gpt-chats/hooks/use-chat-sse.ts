@@ -17,47 +17,70 @@ export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
     loadChat,
     generateBotMessage: generateFromStore,
     sendMessage: sendFromStore,
+    setSelectedModel,
+    setSelectedTools,
   } = useChatStore();
-  const sessionId = chats[chatId]?.sessionId || '';
-  const conversations = chats[chatId]?.conversations || [];
-  const isBotStreaming = chats[chatId]?.isBotStreaming || false;
-  const isBotThinking = chats[chatId]?.isBotThinking || false;
-  const isPendingSend = chats[chatId]?.pendingSend || false;
+  const activeChatId = useChatStore((state) => state.resolveChatId(chatId || ''));
+  const chat = chats[activeChatId] || {
+    sessionId: '',
+    conversations: [],
+    isBotStreaming: false,
+    isBotThinking: false,
+    pendingSend: false,
+  };
+  const sessionId = chat.sessionId || '';
+  const conversations = chat.conversations || [];
+  const isBotStreaming = chat.isBotStreaming || false;
+  const isBotThinking = chat.isBotThinking || false;
+  const currentEvent = chat?.currentEvent || null;
 
-  const { data, isFetched } = useGetConversationById({
+  const { data, isFetching } = useGetConversationById({
     allow_created_by_filter: true,
     call_from: projectSlug,
     project_key: projectKey,
-    session_id: chatId,
+    session_id: activeChatId,
     limit: 100,
     offset: 0,
   });
 
   useEffect(() => {
-    if (chatId && isFetched && data) {
+    if (activeChatId && activeChatId != 'new' && data) {
       if (data.total_count > 0) {
         const conversationData = data.sessions;
-        loadChat(chatId, conversationData);
+        loadChat(activeChatId, conversationData);
       }
     }
-  }, [chatId, data, isFetched, loadChat]);
+  }, [activeChatId, data, loadChat]);
 
   const generateBotMessage = useCallback(
     async (data: { message: string }) => {
-      await generateFromStore(chatId, data.message, setSuggestions);
+      await generateFromStore(activeChatId, data.message, setSuggestions);
     },
-    [chatId, generateFromStore]
+    [activeChatId, generateFromStore]
   );
 
   const sendMessage = useCallback(
     async (data: { message: string }) => {
-      await sendFromStore(chatId, data.message);
+      await sendFromStore(activeChatId, data.message);
     },
-    [chatId, sendFromStore]
+    [activeChatId, sendFromStore]
+  );
+
+  const onModelChange = useCallback(
+    (model: string) => setSelectedModel(activeChatId, model),
+    [activeChatId, setSelectedModel]
+  );
+
+  const onToolsChange = useCallback(
+    (tools: string[]) => {
+      setSelectedTools(activeChatId, tools);
+    },
+    [activeChatId, setSelectedTools]
   );
 
   const isOnline = onlineManager.isOnline;
-
+  const isReady = chatId == 'new' ? true : !isFetching;
+  const { selectedModel, selectedTools } = chat;
   return {
     sessionId,
     sendMessage,
@@ -65,8 +88,14 @@ export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
     isBotThinking,
     isBotStreaming,
     suggestions,
-    isOnline,
+    selectedModel,
+    selectedTools,
+
+    onModelChange,
+    onToolsChange,
     generateBotMessage,
-    isPendingSend,
+    currentEvent,
+    isOnline,
+    isReady,
   };
 };

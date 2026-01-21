@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useSidebar } from '@/components/ui-kit/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui-kit/sidebar';
 import { Menubar, MenubarMenu } from '@/components/ui-kit/menubar';
 import { LanguageSelector, ProfileMenu, AppSidebar } from '@/components/core';
 
@@ -30,7 +30,11 @@ export const MainLayout = () => {
         } transition-[margin-left] duration-300 ease-in-out`}
       >
         <div className="sticky bg-card z-20 top-0 border-b py-2 px-4 sm:px-6 md:px-8 flex justify-between items-center w-full">
-          <div className="flex items-center"></div>
+          <div className="flex items-center">
+            {' '}
+            {isMobile && <SidebarTrigger className="pl-0" />}
+          </div>
+
           <div className="flex justify-between items-center gap-1 sm:gap-3 md:gap-8">
             <Menubar className="border-none p-0">
               <MenubarMenu></MenubarMenu>

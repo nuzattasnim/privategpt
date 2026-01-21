@@ -74,85 +74,91 @@ export const AppSidebar = () => {
   };
 
   return (
-    <Sidebar
-      className={`bg-gradient-to-b from-card to-card/95 h-full border-r border-border/50 backdrop-blur-xl ${
-        isMobile ? 'mobile-sidebar' : ''
-      }`}
-      collapsible={isMobile ? 'none' : 'icon'}
-      style={sidebarStyle}
-    >
-      <SidebarHeader
-        className={`${
-          !open && !isMobile ? 'border-b border-border/50' : ''
-        } p-3 bg-gradient-to-b from-background/50 to-transparent`}
-      >
-        <LogoSection
-          theme={theme}
-          open={open}
-          isMobile={isMobile}
-          onClose={() => setOpenMobile(false)}
+    <>
+      {isMobile && openMobile && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity"
+          onClick={() => setOpenMobile(false)}
         />
-      </SidebarHeader>
-
-      <SidebarContent className="text-base mx-3 my-4 text-high-emphasis font-normal overflow-x-hidden">
-        <Button
-          onClick={handleNewChat}
-          variant={open && !isMobile ? 'outline' : 'ghost'}
-          className={`mb-2 gap-2 ${
-            open && !isMobile ? 'w-full justify-start' : 'w-full min-w-[48px] justify-center'
-          }`}
+      )}
+      <Sidebar
+        className={`bg-gradient-to-b from-card to-card/95 h-full border-r border-border/50 backdrop-blur-xl ${
+          isMobile ? 'mobile-sidebar' : ''
+        }`}
+        collapsible={isMobile ? 'none' : 'icon'}
+        style={sidebarStyle}
+      >
+        <SidebarHeader
+          className={`${
+            !open && !isMobile ? 'border-b border-border/50' : ''
+          } p-3 bg-gradient-to-b from-background/50 to-transparent`}
         >
-          <PenSquare className="h-4 w-4" />
-          {open && !isMobile && <span>{t('NEW_CHAT')}</span>}
-        </Button>
-        <Accordion type="single" collapsible defaultValue="list">
-          <AccordionItem value="list" className="border-none">
-            <AccordionTrigger className=" hover:no-underline justify-start gap-1 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
-              {t('YOUR_CHATS')}
-            </AccordionTrigger>
-            <AccordionContent>
-              {chatList.length === 0 ? (
-                <p className="text-sm text-muted-foreground mt-2">{t('NO_CHATS_AVAILABLE')}</p>
-              ) : (
-                <div className="max-h-[400px] overflow-y-auto">
-                  {chatList
-                    .sort(
-                      (a, b) =>
-                        new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
-                    )
-                    .map((chat) => (
-                      <div
-                        key={chat.id}
-                        className="rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item p-2"
-                        onClick={() => {
-                          navigate(`/chat/${chat.id}`);
-                          if (isMobile) {
-                            setOpenMobile(false);
-                          }
-                        }}
-                        role="button"
-                      >
-                        <span className="text-sm text-high-emphasis truncate block">
-                          {chat.title}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          className="w-fit h-fit p-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteHandler(chat.id);
+          <LogoSection
+            theme={theme}
+            open={open}
+            isMobile={isMobile}
+            onClose={() => setOpenMobile(false)}
+          />
+        </SidebarHeader>
+
+        <SidebarContent className="text-base mx-3 my-4 text-high-emphasis font-normal overflow-x-hidden">
+          <Button
+            onClick={handleNewChat}
+            variant="outline"
+            className="mt-2 mb-2 gap-2 justify-start"
+          >
+            <PenSquare className="h-4 w-4" />
+            <span>{t('NEW_CHAT')}</span>
+          </Button>
+          <Accordion type="single" collapsible defaultValue="list">
+            <AccordionItem value="list" className="border-none">
+              <AccordionTrigger className=" hover:no-underline justify-start gap-1 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
+                {t('YOUR_CHATS')}
+              </AccordionTrigger>
+              <AccordionContent>
+                {chatList.length === 0 ? (
+                  <p className="text-sm text-muted-foreground mt-2">{t('NO_CHATS_AVAILABLE')}</p>
+                ) : (
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {chatList
+                      .sort(
+                        (a, b) =>
+                          new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
+                      )
+                      .map((chat) => (
+                        <div
+                          key={chat.id}
+                          className="rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item p-2"
+                          onClick={() => {
+                            navigate(`/chat/${chat.id}`);
+                            if (isMobile) {
+                              setOpenMobile(false);
+                            }
                           }}
+                          role="button"
                         >
-                          <Trash className="w-3 h-3 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </SidebarContent>
-    </Sidebar>
+                          <span className="text-sm text-high-emphasis truncate block">
+                            {chat.title}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            className="w-fit h-fit p-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteHandler(chat.id);
+                            }}
+                          >
+                            <Trash className="w-3 h-3 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </SidebarContent>
+      </Sidebar>
+    </>
   );
 };

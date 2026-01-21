@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Check, ChevronDown, Loader2, Wrench } from 'lucide-react';
+import { Check, Loader2, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui-kit/button';
+import { Badge } from '@/components/ui-kit/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui-kit/popover';
 import { cn } from '@/lib/utils';
 import { useGetTools } from '@/modules/gpt-chats/hooks/use-gpt-chat';
@@ -55,31 +56,21 @@ export const ToolsSelector = ({ value = [], onChange, tenantId }: ToolsSelectorP
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           role="combobox"
           aria-expanded={open}
-          className="w-[180px] h-11 justify-between bg-card/50 hover:bg-card border-border/50 transition-all duration-200 rounded-xl px-3 group"
+          className="w-11 h-11 justify-center bg-gradient-to-br from-card/80 to-card/50 hover:from-card hover:to-card/80 border border-border/50  transition-all duration-300 rounded-xl p-0 group relative  backdrop-blur-sm"
         >
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="p-1.5 rounded-lg flex-shrink-0 transition-all duration-200 bg-primary/10 group-hover:scale-110">
-              <Wrench className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div className="flex flex-col items-start min-w-0 flex-1">
-              <span className="text-sm font-medium truncate w-full text-left">
-                {selectedCount === 1
-                  ? '1 Tool'
-                  : selectedCount > 1
-                    ? `${selectedCount} Tools`
-                    : 'Select Tools'}
-              </span>
-            </div>
+          <div className="p-1.5 rounded-lg flex-shrink-0 transition-all duration-300 bg-gradient-to-br from-primary/15 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 group-hover:scale-110 group-hover:rotate-12">
+            <Wrench className="h-5 w-5 text-primary transition-transform duration-300 group-hover:rotate-12" />
           </div>
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 opacity-50 transition-all duration-200',
-              open && 'rotate-180'
-            )}
-          />
+
+          {selectedCount > 0 && (
+            <Badge className="absolute -top-1.5 -right-1.5 h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center text-[10px] font-semibold bg-gradient-to-br from-primary via-primary to-primary/90 text-white border-2 border-background shadow-lg shadow-primary/50 hover:shadow-primary/70 hover:scale-110 transition-all duration-200 animate-in zoom-in">
+              {selectedCount}
+              <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+            </Badge>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent

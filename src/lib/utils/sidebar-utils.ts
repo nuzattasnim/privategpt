@@ -17,12 +17,14 @@ export function getSidebarStyle(
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
+      width: 'min(80vw, 280px)',
       height: '100%',
+      maxWidth: '280px',
       zIndex: 50,
       borderRight: 'none',
       transition: 'transform 0.3s ease-in-out',
       transform: openMobile ? 'translateX(0)' : 'translateX(-100%)',
+      overscrollBehavior: 'contain',
     };
   }
 

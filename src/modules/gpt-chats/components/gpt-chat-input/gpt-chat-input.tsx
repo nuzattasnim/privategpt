@@ -6,22 +6,31 @@ import { GroupedModelSelector } from './model-selector';
 import { ToolsSelector } from './tools-selector';
 import { Tooltip, TooltipTrigger } from '@/components/ui-kit/tooltip';
 import { useSidebar } from '@/components/ui-kit/sidebar';
+import { useTranslation } from 'react-i18next';
 
 interface GptChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+
+  selectedTools: string[];
+  onToolsChange: (tools: string[]) => void;
 }
 
 export const GptChatInput = ({
   onSendMessage,
   disabled = false,
-  placeholder = 'Ask me anything...',
+  placeholder,
+  selectedModel,
+  onModelChange,
+  selectedTools,
+  onToolsChange,
 }: GptChatInputProps) => {
   const [message, setMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-3-flash');
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const { state } = useSidebar();
+  const { t } = useTranslation();
 
   const onMessageHandler = () => {
     onSendMessage(message);
@@ -34,7 +43,7 @@ export const GptChatInput = ({
         state === 'collapsed' ? 'md:ml-16' : 'md:ml-60'
       }`}
     >
-      <div className="w-full max-w-3xl xl:max-w-5xl mx-auto px-4 pb-4  backdrop-blur-xl">
+      <div className="w-full max-w-3xl xl:max-w-5xl mx-auto px-4 pb-4  bg-background">
         <div className="relative bg-card/80  rounded-3xl border-2 border-border hover:border-primary focus-within:border-primary transition-all duration-300 ">
           <Textarea
             value={message}
@@ -45,7 +54,7 @@ export const GptChatInput = ({
                 onMessageHandler();
               }
             }}
-            placeholder={placeholder}
+            placeholder={placeholder || t('ASK_ME_ANYTHING')}
             disabled={disabled}
             className="min-h-[80px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-16 px-6 py-5 pb-12 sm:pb-5 text-base placeholder:text-muted-foreground/60"
           />
@@ -70,7 +79,7 @@ export const GptChatInput = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    <GroupedModelSelector value={selectedModel} onChange={setSelectedModel} />
+                    <GroupedModelSelector value={selectedModel} onChange={onModelChange} />
                   </div>
                 </TooltipTrigger>
               </Tooltip>
@@ -78,7 +87,7 @@ export const GptChatInput = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    <ToolsSelector value={selectedTools} onChange={setSelectedTools} />
+                    <ToolsSelector value={selectedTools} onChange={onToolsChange} />
                   </div>
                 </TooltipTrigger>
               </Tooltip>

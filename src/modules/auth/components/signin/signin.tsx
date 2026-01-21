@@ -6,7 +6,6 @@ import { SigninEmail } from '../signin-email';
 import { useTheme } from '@/styles/theme/theme-provider';
 import darklogo from '@/assets/images/construct_logo_dark.svg';
 import lightlogo from '@/assets/images/construct_logo_light.svg';
-import { Link } from 'react-router-dom';
 import { useGetLoginOptions } from '../../hooks/use-auth';
 import { SigninOidc } from '../signin-oidc';
 
@@ -36,13 +35,9 @@ export const Signin = () => {
       <div>
         <div className="text-2xl font-bold text-high-emphasis">{t('LOG_IN')}</div>
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-sm font-normal text-medium-emphasis">{t('DONT_HAVE_ACCOUNT')}</span>
-          <Link
-            to={'/signup'}
-            className="text-sm font-bold text-primary hover:text-primary-600 hover:underline"
-          >
-            {t('SIGN_UP')}
-          </Link>
+          <span className="text-sm font-normal text-medium-emphasis">
+            {t('ALREADY_A_BLOCKS_CLOUD_USER')} {t('READY_TO_DIVE_IN')}
+          </span>
         </div>
       </div>
       <div className={'w-full ' + (isBannerAllowedToVisible ? 'visible' : 'invisible h-0')}>

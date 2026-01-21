@@ -36,13 +36,9 @@ export const Signin = () => {
       <div>
         <div className="text-2xl font-bold text-high-emphasis">{t('LOG_IN')}</div>
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-sm font-normal text-medium-emphasis">{t('DONT_HAVE_ACCOUNT')}</span>
-          <Link
-            to={'/signup'}
-            className="text-sm font-bold text-primary hover:text-primary-600 hover:underline"
-          >
-            {t('SIGN_UP')}
-          </Link>
+          <span className="text-sm font-normal text-medium-emphasis">{t('Ready to dive in?')}</span>
+
+          <span className="text-sm font-normal text-medium-emphasis">{t("Let's get started")}</span>
         </div>
       </div>
       <div className={'w-full ' + (isBannerAllowedToVisible ? 'visible' : 'invisible h-0')}>

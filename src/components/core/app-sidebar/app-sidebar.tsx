@@ -16,6 +16,7 @@ import {
   useDeleteConversationById,
   useGetConversations,
 } from '@/modules/gpt-chats/hooks/use-conversation-api';
+import { useTranslation } from 'react-i18next';
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
@@ -27,6 +28,7 @@ export const AppSidebar = () => {
   const { setOpenMobile, open, isMobile, openMobile } = useSidebar();
   const { mutateAsync: deleteMutateAsync } = useDeleteConversationById();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data } = useGetConversations({
     limit: 10,
@@ -49,7 +51,10 @@ export const AppSidebar = () => {
     return data.sessions.map((session) => ({
       id: session.session_id,
       lastEntryDate: session.last_entry_date,
-      title: session.conversation.Response.slice(0, 30) || session.conversation.Query,
+      title:
+        session.conversation.Title.slice(0, 30) ||
+        session.conversation.Response.slice(0, 30) ||
+        session.conversation.Query,
     }));
   }, [data]);
 
@@ -98,16 +103,16 @@ export const AppSidebar = () => {
           }`}
         >
           <PenSquare className="h-4 w-4" />
-          {open && !isMobile && <span>New Chat</span>}
+          {open && !isMobile && <span>{t('NEW_CHAT')}</span>}
         </Button>
         <Accordion type="single" collapsible defaultValue="list">
           <AccordionItem value="list" className="border-none">
             <AccordionTrigger className=" hover:no-underline justify-start gap-1 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
-              Your chats
+              {t('YOUR_CHATS')}
             </AccordionTrigger>
             <AccordionContent>
               {chatList.length === 0 ? (
-                <p className="text-sm text-muted-foreground mt-2">No chats available.</p>
+                <p className="text-sm text-muted-foreground mt-2">{t('NO_CHATS_AVAILABLE')}</p>
               ) : (
                 <div className="max-h-[400px] overflow-y-auto">
                   {chatList

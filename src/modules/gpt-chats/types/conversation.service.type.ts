@@ -370,6 +370,7 @@ export interface ConversationSessionSummary {
     SessionId: string;
     Summary: string | null;
     Tags: string[];
+    Title: string;
     TokenUsage: {
       input_tokens: number;
       output_tokens: number;

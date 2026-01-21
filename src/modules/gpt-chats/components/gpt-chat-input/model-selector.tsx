@@ -158,7 +158,7 @@ export const GroupedModelSelector = ({ value = '', onChange }: GroupedModelSelec
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[95vw] sm:w-[420px] lg:w-[480px] p-0 rounded-2xl border-border/50 shadow-xl"
+        className="w-[95vw] sm:w-[420px] lg:w-[480px] p-0 rounded-2xl border-border/50 "
         align="start"
       >
         <div className="flex h-[320px] sm:h-[300px]">
@@ -188,7 +188,7 @@ export const GroupedModelSelector = ({ value = '', onChange }: GroupedModelSelec
                       className={cn(
                         'w-full flex items-center gap-2.5 px-2.5 py-2 text-left transition-all duration-200 rounded-xl group/provider relative',
                         isProviderSelected
-                          ? 'bg-primary/15  shadow-sm'
+                          ? 'bg-primary/15 border-b border-border'
                           : 'hover:bg-accent/50 border-2 border-transparent'
                       )}
                     >
@@ -249,18 +249,18 @@ export const GroupedModelSelector = ({ value = '', onChange }: GroupedModelSelec
 
                 <div className="flex-1 overflow-y-auto p-2 sm:p-3">
                   <div className="flex flex-row flex-wrap gap-2">
-                      {selectedProviderGroup.models.map((model) => {
+                    {selectedProviderGroup.models.map((model) => {
                       const isSelected = value === model.model_name;
                       return (
                         <button
                           key={model.model_name}
                           onClick={() => handleSelect(model.model_name)}
-                            className={cn(
-                              'group/model flex flex-col gap-2 p-2.5 sm:p-3 rounded-xl text-left transition-all duration-200 border-2 relative overflow-hidden w-fit',
-                              isSelected
-                                ? 'bg-primary/10 border-primary '
-                                : 'bg-card/50 border-border/40 hover:bg-accent/50 hover:border-primary '
-                            )}
+                          className={cn(
+                            'group/model flex flex-col gap-2 p-2.5 sm:p-3 rounded-xl text-left transition-all duration-200 border-2 relative overflow-hidden w-fit',
+                            isSelected
+                              ? 'bg-primary/10 border-primary '
+                              : 'bg-card/50 border-border/40 hover:bg-accent/50 hover:border-primary '
+                          )}
                         >
                           {!isSelected && (
                             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover/model:opacity-100 transition-opacity duration-300" />

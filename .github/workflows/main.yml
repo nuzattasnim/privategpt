@@ -12,6 +12,7 @@ on:
 
 env:
   RUN_SONARQUBE: 'false'
+  
 
 jobs:
   initialization:

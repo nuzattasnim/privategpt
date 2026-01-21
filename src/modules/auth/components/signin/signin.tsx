@@ -35,9 +35,9 @@ export const Signin = () => {
       <div>
         <div className="text-2xl font-bold text-high-emphasis">{t('LOG_IN')}</div>
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-sm font-normal text-medium-emphasis">{t('Ready to dive in?')}</span>
-
-          <span className="text-sm font-normal text-medium-emphasis">{t("Let's get started")}</span>
+          <span className="text-sm font-normal text-medium-emphasis">
+            {t('ALREADY_A_BLOCKS_CLOUD_USER')} {t('READY_TO_DIVE_IN')}
+          </span>
         </div>
       </div>
       <div className={'w-full ' + (isBannerAllowedToVisible ? 'visible' : 'invisible h-0')}>

@@ -12,7 +12,7 @@ const ThinkingIndicator = () => (
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <div className="flex items-center gap-2">
         <span className="text-foreground/60 text-sm italic">Sending</span>
         <div className="flex items-center gap-1">
@@ -39,7 +39,7 @@ const ChatEventMessageIndicator = ({ message }: { message: string }) => (
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <ChatEventMessage message={message} />
     </div>
   </div>
@@ -83,10 +83,18 @@ export const GptChatPageDetails = () => {
   const renderMessageContent = (content: string, isStreaming = false) => {
     return (
       <div className="text-[15px]">
-        <MarkdownRenderer content={content} />
-        {isStreaming && (
-          <span className="inline-block w-1.5 h-5 bg-foreground ml-0.5 animate-pulse" />
-        )}
+        <div className="inline-block relative">
+          <MarkdownRenderer content={content} />
+          {isStreaming && (
+            <span
+              className="absolute w-1 h-[1.2em] bg-foreground ml-[2px] animate-pulse"
+              style={{
+                bottom: '0.2em',
+                right: '-4px',
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   };

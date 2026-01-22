@@ -2,7 +2,6 @@
 // @ts-nocheck
 /* eslint-disable */
 /* eslint-disable @next/next/no-img-element, react/display-name */
-
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import dark from 'react-syntax-highlighter/dist/esm/styles/prism/atom-dark';
 import type { Components } from 'react-markdown';

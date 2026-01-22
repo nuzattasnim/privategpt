@@ -79,7 +79,7 @@ export const MarkdownComponentsMap: Partial<Components> = {
     return <code {...props}>{children}</code>;
   },
 
-  pre: (props) => <pre className="overflow-x-auto whitespace-pre-wrap">{props.children}</pre>,
+  pre: (props) => <pre className="overflow-x-auto whitespace-pre-wrap p-0">{props.children}</pre>,
 
   img: (props) => <img loading="lazy" alt={props.alt} className="h-auto max-w-full" {...props} />,
 };

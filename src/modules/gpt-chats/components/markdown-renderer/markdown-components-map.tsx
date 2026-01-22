@@ -8,9 +8,7 @@ import type { Components } from 'react-markdown';
 import { cn } from '@/lib/utils';
 
 export const MarkdownComponentsMap: Partial<Components> = {
-  p: (props) => (
-    <p className="my-1 whitespace-pre-wrap break-words leading-relaxed">{props.children}</p>
-  ),
+  p: (props) => <p className="whitespace-pre-wrap break-words leading-relaxed">{props.children}</p>,
 
   a: (props) => (
     <a className="text-primary" target="_blank" {...props}>
@@ -56,15 +54,15 @@ export const MarkdownComponentsMap: Partial<Components> = {
     if (!inline && match) {
       const language = match[1];
       return (
-        <div className="relative max-w-full overflow-auto rounded-md bg-gray-900">
-          <div className="absolute left-0 top-0 z-10 flex w-full items-center justify-between bg-gray-700 p-2.5 text-xs text-gray-300">
+        <div className="max-w-full overflow-auto rounded-md bg-gray-900">
+          <div className="flex w-full items-center justify-between bg-gray-700 p-2.5 text-xs text-gray-300">
             <span className="text-sm uppercase">{language}</span>
           </div>
           <SyntaxHighlighter
             showLineNumbers
             style={dark}
             customStyle={{
-              marginTop: '28px',
+              margin: 0,
               scrollbarColor: '#424242 transparent',
               scrollMargin: '0',
             }}
@@ -81,7 +79,7 @@ export const MarkdownComponentsMap: Partial<Components> = {
     return <code {...props}>{children}</code>;
   },
 
-  pre: (props) => <pre className="overflow-x-auto whitespace-pre-wrap">{props.children}</pre>,
+  pre: (props) => <pre className="overflow-x-auto whitespace-pre-wrap p-0">{props.children}</pre>,
 
   img: (props) => <img loading="lazy" alt={props.alt} className="h-auto max-w-full" {...props} />,
 };

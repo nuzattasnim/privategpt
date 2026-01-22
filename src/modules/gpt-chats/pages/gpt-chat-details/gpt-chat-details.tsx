@@ -5,17 +5,19 @@ import { Bot, User, Copy, Check } from 'lucide-react';
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
-import { ChatEventMessage } from '../../utils/chat-event-messages';
+import { ChatEventMessage, SparkleText } from '../../utils/chat-event-messages';
 
 const ThinkingIndicator = () => (
   <div className="flex gap-4 animate-in fade-in duration-300 items-start ml-1">
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <div className="flex items-center gap-2">
-        <span className="text-foreground/60 text-sm italic">Sending</span>
-        <div className="flex items-center gap-1">
+        {/* <span className="text-foreground/60 text-sm italic">Sending</span> */}
+        <SparkleText text={'Sending'} />
+
+        {/* <div className="flex items-center gap-1">
           <div
             className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
             style={{ animationDelay: '0ms' }}
@@ -28,7 +30,7 @@ const ThinkingIndicator = () => (
             className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
             style={{ animationDelay: '300ms' }}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   </div>
@@ -39,7 +41,7 @@ const ChatEventMessageIndicator = ({ message }: { message: string }) => (
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <ChatEventMessage message={message} />
     </div>
   </div>
@@ -83,10 +85,34 @@ export const GptChatPageDetails = () => {
   const renderMessageContent = (content: string, isStreaming = false) => {
     return (
       <div className="text-[15px]">
-        <MarkdownRenderer content={content} />
-        {isStreaming && (
-          <span className="inline-block w-1.5 h-5 bg-foreground ml-0.5 animate-pulse" />
-        )}
+        <div className="inline-block relative">
+          <MarkdownRenderer content={content} />
+          {isStreaming && (
+            <>
+              <span
+                className="absolute w-[2px] h-[1.2em] bg-primary ml-[2px]"
+                style={{
+                  bottom: '0.2em',
+                  right: '-4px',
+                  animation: 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                }}
+              />
+
+              {[1, 2, 3, 4, 5].map((i) => (
+                <span
+                  key={i}
+                  className="absolute w-1 h-1 bg-primary rounded-full"
+                  style={{
+                    bottom: '0.5em',
+                    right: '-4px',
+                    animation: `splash${i} 1.5s ease-out infinite`,
+                    opacity: 0,
+                  }}
+                />
+              ))}
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -111,7 +137,7 @@ export const GptChatPageDetails = () => {
                   className={`group flex-1 relative ${msg.type === 'user' ? 'flex justify-end' : ''}`}
                 >
                   <div
-                    className={`max-w-[90%] px-5 py-1 ${msg.type === 'user' && 'bg-accent rounded '}`}
+                    className={`max-w-[90%] py-1 ${msg.type === 'user' && 'bg-accent rounded px-5'}`}
                   >
                     {msg.type === 'user' ? (
                       <p className="text-[15px] leading-7 whitespace-pre-wrap">{msg.message}</p>

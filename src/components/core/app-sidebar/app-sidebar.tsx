@@ -48,6 +48,7 @@ export const AppSidebar = () => {
   const { t } = useTranslation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const { data } = useGetConversations({
     limit: 100,
@@ -71,8 +72,8 @@ export const AppSidebar = () => {
       id: session.session_id,
       lastEntryDate: session.last_entry_date,
       title:
-        session.conversation?.Title?.slice(0, 30) ||
-        session.conversation?.Response?.slice(0, 30) ||
+        session.conversation?.Title?.slice(0, 35) ||
+        session.conversation?.Response?.slice(0, 35) ||
         session.conversation?.Query ||
         '',
     }));
@@ -110,13 +111,11 @@ export const AppSidebar = () => {
         />
       )}
       <Sidebar
-        className={`bg-card h-full border-r border-border/50  ${isMobile ? 'mobile-sidebar' : ''}`}
+        className={` h-full border-r border-border/50  ${isMobile ? 'mobile-sidebar' : ''}`}
         collapsible={isMobile ? 'none' : 'icon'}
         style={sidebarStyle}
       >
-        <SidebarHeader
-          className={`${!open && !isMobile ? 'border-b border-border/50' : ''} p-3 bg-card`}
-        >
+        <SidebarHeader className={`${!open && !isMobile ? 'border-b border-border/50' : ''} p-3`}>
           <LogoSection
             theme={theme}
             open={open}
@@ -125,7 +124,7 @@ export const AppSidebar = () => {
           />
         </SidebarHeader>
 
-        <SidebarContent className="text-base px-3 py-4 text-high-emphasis font-normal overflow-x-hidden bg-card">
+        <SidebarContent className="text-base px-3 py-4 text-high-emphasis font-normal overflow-x-hidden">
           <Button
             onClick={handleNewChat}
             variant="outline"
@@ -134,12 +133,12 @@ export const AppSidebar = () => {
             <PenSquare className="h-4 w-4" />
             <span>{t('NEW_CHAT')}</span>
           </Button>
-          <Accordion type="single" collapsible defaultValue="list" className="bg-card">
-            <AccordionItem value="list" className="border-none bg-card">
+          <Accordion type="single" collapsible defaultValue="list">
+            <AccordionItem value="list" className="border-none ">
               <AccordionTrigger className=" hover:no-underline justify-start gap-1 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
                 {t('YOUR_CHATS')}
               </AccordionTrigger>
-              <AccordionContent className="bg-card">
+              <AccordionContent>
                 {chatList.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">{t('NO_CHATS_AVAILABLE')}</p>
                 ) : (
@@ -152,7 +151,9 @@ export const AppSidebar = () => {
                       .map((chat) => (
                         <div
                           key={chat.id}
-                          className="rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors"
+                          className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                            chatId === chat.id ? 'bg-accent/100' : ''
+                          } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
                           onClick={() => {
                             navigate(`/chat/${chat.id}`);
                             if (isMobile) {
@@ -165,7 +166,9 @@ export const AppSidebar = () => {
                             {chat.title}
                           </span>
 
-                          <DropdownMenu>
+                          <DropdownMenu
+                            onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                          >
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"

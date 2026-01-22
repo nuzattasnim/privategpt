@@ -1,21 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
-import { Bot, User, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check } from 'lucide-react';
+import { Bot, User, Copy, Check } from 'lucide-react';
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
-import { ChatEventMessage } from '../../utils/chat-event-messages';
+import { ChatEventMessage, SparkleText } from '../../utils/chat-event-messages';
 
 const ThinkingIndicator = () => (
   <div className="flex gap-4 animate-in fade-in duration-300 items-start ml-1">
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <div className="flex items-center gap-2">
-        <span className="text-foreground/60 text-sm italic">Sending</span>
-        <div className="flex items-center gap-1">
+        {/* <span className="text-foreground/60 text-sm italic">Sending</span> */}
+        <SparkleText text={'Sending'} />
+
+        {/* <div className="flex items-center gap-1">
           <div
             className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
             style={{ animationDelay: '0ms' }}
@@ -28,7 +30,7 @@ const ThinkingIndicator = () => (
             className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce"
             style={{ animationDelay: '300ms' }}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   </div>
@@ -39,7 +41,7 @@ const ChatEventMessageIndicator = ({ message }: { message: string }) => (
     <div className=" w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-600 flex items-center justify-center flex-shrink-0">
       <Bot className="h-4 w-4 text-white" />
     </div>
-    <div className="flex-1 py-1 ml-4">
+    <div className="flex-1 py-1">
       <ChatEventMessage message={message} />
     </div>
   </div>
@@ -83,19 +85,43 @@ export const GptChatPageDetails = () => {
   const renderMessageContent = (content: string, isStreaming = false) => {
     return (
       <div className="text-[15px]">
-        <MarkdownRenderer content={content} />
-        {isStreaming && (
-          <span className="inline-block w-1.5 h-5 bg-foreground ml-0.5 animate-pulse" />
-        )}
+        <div className="inline-block relative">
+          <MarkdownRenderer content={content} />
+          {isStreaming && (
+            <>
+              <span
+                className="absolute w-[2px] h-[1.2em] bg-primary ml-[2px]"
+                style={{
+                  bottom: '0.2em',
+                  right: '-4px',
+                  animation: 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                }}
+              />
+
+              {[1, 2, 3, 4, 5].map((i) => (
+                <span
+                  key={i}
+                  className="absolute w-1 h-1 bg-primary rounded-full"
+                  style={{
+                    bottom: '0.5em',
+                    right: '-4px',
+                    animation: `splash${i} 1.5s ease-out infinite`,
+                    opacity: 0,
+                  }}
+                />
+              ))}
+            </>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-background">
+    <div className="flex flex-col h-full w-full bg-background relative">
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {isReady && (
-          <div className="max-w-3xl mx-auto px-4 py-6 pb-64 space-y-6">
+          <div className="max-w-3xl mx-auto px-4 py-6 pb-[200px] space-y-6">
             {conversations.map((msg, index) => (
               <div
                 key={index}
@@ -107,9 +133,11 @@ export const GptChatPageDetails = () => {
                   </div>
                 )}
 
-                <div className={`group flex-1 ${msg.type === 'user' ? 'flex justify-end' : ''}`}>
+                <div
+                  className={`group flex-1 relative ${msg.type === 'user' ? 'flex justify-end' : ''}`}
+                >
                   <div
-                    className={`max-w-[90%] px-5 py-1 ${msg.type === 'user' && 'bg-accent rounded '}`}
+                    className={`max-w-[90%] py-1 ${msg.type === 'user' && 'bg-accent rounded px-5'}`}
                   >
                     {msg.type === 'user' ? (
                       <p className="text-[15px] leading-7 whitespace-pre-wrap">{msg.message}</p>
@@ -119,7 +147,7 @@ export const GptChatPageDetails = () => {
                   </div>
 
                   {msg.type === 'bot' && !msg.streaming && (
-                    <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute -bottom-8 left-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -131,27 +159,6 @@ export const GptChatPageDetails = () => {
                         ) : (
                           <Copy className="h-3.5 w-3.5" />
                         )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-lg hover:bg-muted"
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-lg hover:bg-muted"
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-lg hover:bg-muted"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )}
@@ -182,6 +189,7 @@ export const GptChatPageDetails = () => {
         onModelChange={onModelChange}
         selectedTools={selectedTools}
         onToolsChange={onToolsChange}
+        variant="chat-details"
       />
     </div>
   );

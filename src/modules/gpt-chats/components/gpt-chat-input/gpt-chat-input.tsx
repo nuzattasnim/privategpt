@@ -8,6 +8,7 @@ import { Tooltip, TooltipTrigger } from '@/components/ui-kit/tooltip';
 import { useSidebar } from '@/components/ui-kit/sidebar';
 import { useTranslation } from 'react-i18next';
 import { SelectModelType } from '../../hooks/use-chat-store';
+import { cn } from '@/lib/utils';
 
 interface GptChatInputProps {
   onSendMessage: (message: string) => void;
@@ -17,6 +18,7 @@ interface GptChatInputProps {
   onModelChange: (model: SelectModelType) => void;
   selectedTools: string[];
   onToolsChange: (tools: string[]) => void;
+  className?: string;
 }
 
 export const GptChatInput = ({
@@ -27,6 +29,7 @@ export const GptChatInput = ({
   onModelChange,
   selectedTools,
   onToolsChange,
+  className,
 }: GptChatInputProps) => {
   const [message, setMessage] = useState('');
   const { state } = useSidebar();
@@ -39,9 +42,11 @@ export const GptChatInput = ({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-10 transition-all duration-300 ${
-        state === 'collapsed' ? 'md:ml-16' : 'md:ml-60'
-      }`}
+      className={cn(
+        'fixed bottom-0 left-0 right-0 z-10 transition-all duration-300',
+        state === 'collapsed' ? 'md:ml-16' : 'md:ml-60',
+        className
+      )}
     >
       <div className="w-full max-w-3xl xl:max-w-5xl mx-auto px-4 pb-4  backdrop-blur-3xl">
         <div className="relative bg-card/80  rounded-3xl border-2 border-border hover:border-primary focus-within:border-primary transition-all duration-300 ">

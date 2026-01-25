@@ -253,7 +253,9 @@ export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererPr
     <div
       className={cn(
         'prose max-w-none dark:prose-invert',
-        'prose-headings:font-semibold ',
+        'prose-headings:font-semibold',
+        'prose-h1:mb-3',
+        'prose-h2:my-3',
         'prose-p:leading-relaxed',
         'prose-ol:list-decimal prose-ul:list-disc',
         className

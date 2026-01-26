@@ -1,7 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import { Bot, User, Clipboard, Check, Workflow } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui-kit/tooltip';
+import { cn } from '@/lib/utils';
 import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
@@ -147,19 +154,55 @@ export const GptChatPageDetails = () => {
                   </div>
 
                   {msg.type === 'bot' && !msg.streaming && (
-                    <div className="absolute -bottom-8 left-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-lg hover:bg-muted"
-                        onClick={() => handleCopy(msg.message, index)}
-                      >
-                        {copiedId === index ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
+                    <div className="absolute -bottom-8 left-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-lg hover:bg-muted"
+                              onClick={() => handleCopy(msg.message, index)}
+                            >
+                              {copiedId === index ? (
+                                <Check className="h-3.5 w-3.5 text-green-600" />
+                              ) : (
+                                <Clipboard className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{copiedId === index ? 'Copied!' : 'Copy'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      {msg.metadata?.tool_calls_made !== undefined && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={cn(
+                                  'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors',
+                                  msg.metadata.tool_calls_made > 0
+                                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                                    : 'hover:bg-muted'
+                                )}
+                              >
+                                <Workflow className="h-3.5 w-3.5" />
+                                <span>{msg.metadata.tool_calls_made}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {msg.metadata.tool_calls_made === 0
+                                  ? 'No tools used'
+                                  : `${msg.metadata.tool_calls_made} tool ${msg.metadata.tool_calls_made === 1 ? 'call' : 'calls'} made`}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                   )}
                 </div>

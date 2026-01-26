@@ -6,7 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import dark from 'react-syntax-highlighter/dist/esm/styles/prism/atom-dark';
 import type { Components } from 'react-markdown';
 import { cn } from '@/lib/utils';
-import { Check, Copy } from 'lucide-react';
+import { Check, Clipboard } from 'lucide-react';
 import { useState } from 'react';
 
 export const MarkdownComponentsMap: Partial<Components> = {
@@ -78,7 +78,7 @@ export const MarkdownComponentsMap: Partial<Components> = {
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4" />
+                  <Clipboard className="h-4 w-4" />
                   <span>Copy</span>
                 </>
               )}

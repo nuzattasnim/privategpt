@@ -220,7 +220,7 @@ export const GptChatPageDetails = () => {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-700 dark:border-slate-300">
-                            <p>{copiedId === index ? 'Copied!' : 'Copy'}</p>
+                            <p>{copiedId === index ? 'Copied' : 'Copy'}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

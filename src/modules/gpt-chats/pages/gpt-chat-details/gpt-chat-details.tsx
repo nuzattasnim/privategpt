@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
-import { Bot, User, Clipboard, Check, Zap } from 'lucide-react';
+import { Bot, Clipboard, Check, Zap } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +13,8 @@ import { GptChatInput } from '../../components/gpt-chat-input/gpt-chat-input';
 import { useChatSSE } from '../../hooks/use-chat-sse';
 import { MarkdownRenderer } from '../../components/markdown-renderer/markdown-renderer';
 import { ChatEventMessage, SparkleText } from '../../utils/chat-event-messages';
+import DummyProfile from '@/assets/images/dummy_profile.png';
+import { useGetAccount } from '@/modules/profile/hooks/use-account';
 
 const formatTimestamp = (timestamp: string) => {
   if (!timestamp) return '';
@@ -82,6 +84,7 @@ export const GptChatPageDetails = () => {
   const { chatId } = useParams();
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { data } = useGetAccount();
   const {
     sendMessage,
     conversations,
@@ -152,7 +155,7 @@ export const GptChatPageDetails = () => {
     <div className="flex flex-col h-full w-full bg-background relative">
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {isReady && (
-          <div className="max-w-4xl mx-auto px-4 py-6 pb-[250px] space-y-6">
+          <div className="max-w-4xl mx-auto px-4 py-6 pb-[250px] space-y-12">
             {conversations.map((msg, index) => (
               <div
                 key={index}
@@ -252,8 +255,17 @@ export const GptChatPageDetails = () => {
                 </div>
 
                 {msg.type === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center">
-                    <User className="h-4 w-4 " />
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center overflow-hidden">
+                    <img
+                      src={
+                        data?.profileImageUrl !== ''
+                          ? (data?.profileImageUrl ?? DummyProfile)
+                          : DummyProfile
+                      }
+                      alt="profile"
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
               </div>

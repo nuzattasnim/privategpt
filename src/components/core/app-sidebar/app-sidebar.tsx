@@ -19,7 +19,6 @@ import {
   Share2,
   Trash2,
   Download,
-  Bookmark,
   Copy,
   Archive,
 } from 'lucide-react';
@@ -219,7 +218,7 @@ export const AppSidebar = () => {
                                 <span className="text-sm font-medium">{t('RENAME')}</span>
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem
+                              {/* <DropdownMenuItem
                                 disabled
                                 className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
                                 onClick={(e) => {
@@ -228,7 +227,7 @@ export const AppSidebar = () => {
                               >
                                 <Bookmark className="w-4 h-4 mr-3" />
                                 <span className="text-sm font-medium">{t('PIN')}</span>
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
 
                               <DropdownMenuItem
                                 disabled

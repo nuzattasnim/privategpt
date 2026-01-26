@@ -180,7 +180,7 @@ export const GptChatPageDetails = () => {
                   {!msg.streaming && (
                     <div
                       className={cn(
-                        'absolute -bottom-8 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity',
+                        'absolute -bottom-8 flex items-center gap-1.5',
                         msg.type === 'user' ? 'right-0' : 'left-0'
                       )}
                     >

@@ -66,6 +66,51 @@ export const AppSidebar = () => {
   }, [pathname, setOpenMobile, isMobile]);
 
   const sidebarStyle = getSidebarStyle(isMobile, open, openMobile);
+
+  const categorizeChats = (chats: typeof chatList) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const categorized: {
+      [key: string]: typeof chatList;
+    } = {
+      today: [],
+      yesterday: [],
+      previous7Days: [],
+      previous30Days: [],
+      older: [],
+    };
+
+    chats.forEach((chat) => {
+      const chatDate = new Date(chat.lastEntryDate);
+      const chatDateOnly = new Date(
+        chatDate.getFullYear(),
+        chatDate.getMonth(),
+        chatDate.getDate()
+      );
+
+      if (chatDateOnly.getTime() === today.getTime()) {
+        categorized.today.push(chat);
+      } else if (chatDateOnly.getTime() === yesterday.getTime()) {
+        categorized.yesterday.push(chat);
+      } else if (chatDate >= sevenDaysAgo) {
+        categorized.previous7Days.push(chat);
+      } else if (chatDate >= thirtyDaysAgo) {
+        categorized.previous30Days.push(chat);
+      } else {
+        categorized.older.push(chat);
+      }
+    });
+
+    return categorized;
+  };
+
   const chatList = useMemo(() => {
     if (!data || data.total_count === 0) return [];
 
@@ -79,6 +124,13 @@ export const AppSidebar = () => {
         '',
     }));
   }, [data]);
+
+  const categorizedChats = useMemo(() => {
+    const sorted = [...chatList].sort(
+      (a, b) => new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
+    );
+    return categorizeChats(sorted);
+  }, [categorizeChats, chatList]);
 
   if (isMobile && !openMobile) {
     return null;
@@ -159,130 +211,581 @@ export const AppSidebar = () => {
                 {chatList.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">{t('NO_CHATS_AVAILABLE')}</p>
                 ) : (
-                  <div className="max-h-[400px] overflow-y-auto">
-                    {chatList
-                      .sort(
-                        (a, b) =>
-                          new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
-                      )
-                      .map((chat) => (
-                        <div
-                          key={chat.id}
-                          className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
-                            chatId === chat.id ? 'bg-accent/100' : ''
-                          } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
-                          onClick={() => {
-                            navigate(`/chat/${chat.id}`);
-                            if (isMobile) {
-                              setOpenMobile(false);
-                            }
-                          }}
-                          role="button"
-                        >
-                          <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
-                            {chat.title}
-                          </span>
-
-                          <DropdownMenu
-                            onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                  <div className="max-h-[400px] overflow-y-auto space-y-4">
+                    {categorizedChats.today.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('TODAY')}
+                        </h3>
+                        {categorizedChats.today.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                              chatId === chat.id ? 'bg-accent/100' : ''
+                            } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
+                            onClick={() => {
+                              navigate(`/chat/${chat.id}`);
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            role="button"
                           >
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              className="w-44 p-1 rounded-md text-high-emphasis bg-card"
-                              align="start"
-                              side="right"
-                              sideOffset={8}
+                            <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
+                              {chat.title}
+                            </span>
+
+                            <DropdownMenu
+                              onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
                             >
-                              <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-44 p-1 rounded-md text-high-emphasis bg-card"
+                                align="start"
+                                side="right"
+                                sideOffset={8}
                               >
-                                <Share2 className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('SHARE')}</span>
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Share2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('SHARE')}</span>
+                                </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Download className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
+                                </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Pencil className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('RENAME')}</span>
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('RENAME')}</span>
+                                </DropdownMenuItem>
 
-                              {/* <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Bookmark className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('PIN')}</span>
-                              </DropdownMenuItem> */}
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Copy className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('CLONE')}</span>
+                                </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Copy className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('CLONE')}</span>
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('ARCHIVE')}</span>
+                                </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                disabled
-                                className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Archive className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('ARCHIVE')}</span>
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteHandler(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DELETE')}</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteHandler(chat.id);
-                                }}
+                    {categorizedChats.yesterday.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('YESTERDAY')}
+                        </h3>
+                        {categorizedChats.yesterday.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                              chatId === chat.id ? 'bg-accent/100' : ''
+                            } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
+                            onClick={() => {
+                              navigate(`/chat/${chat.id}`);
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            role="button"
+                          >
+                            <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
+                              {chat.title}
+                            </span>
+
+                            <DropdownMenu
+                              onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-44 p-1 rounded-md text-high-emphasis bg-card"
+                                align="start"
+                                side="right"
+                                sideOffset={8}
                               >
-                                <Trash2 className="w-4 h-4 mr-3" />
-                                <span className="text-sm font-medium">{t('DELETE')}</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      ))}
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Share2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('SHARE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('RENAME')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Copy className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('CLONE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('ARCHIVE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteHandler(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DELETE')}</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {categorizedChats.previous7Days.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('PREVIOUS_7_DAYS')}
+                        </h3>
+                        {categorizedChats.previous7Days.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                              chatId === chat.id ? 'bg-accent/100' : ''
+                            } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
+                            onClick={() => {
+                              navigate(`/chat/${chat.id}`);
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            role="button"
+                          >
+                            <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
+                              {chat.title}
+                            </span>
+
+                            <DropdownMenu
+                              onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-44 p-1 rounded-md text-high-emphasis bg-card"
+                                align="start"
+                                side="right"
+                                sideOffset={8}
+                              >
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Share2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('SHARE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('RENAME')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Copy className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('CLONE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('ARCHIVE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteHandler(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DELETE')}</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {categorizedChats.previous30Days.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('PREVIOUS_30_DAYS')}
+                        </h3>
+                        {categorizedChats.previous30Days.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                              chatId === chat.id ? 'bg-accent/100' : ''
+                            } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
+                            onClick={() => {
+                              navigate(`/chat/${chat.id}`);
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            role="button"
+                          >
+                            <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
+                              {chat.title}
+                            </span>
+
+                            <DropdownMenu
+                              onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-44 p-1 rounded-md text-high-emphasis bg-card"
+                                align="start"
+                                side="right"
+                                sideOffset={8}
+                              >
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Share2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('SHARE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('RENAME')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Copy className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('CLONE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('ARCHIVE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteHandler(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DELETE')}</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {categorizedChats.older.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('OLDER')}
+                        </h3>
+                        {categorizedChats.older.map((chat) => (
+                          <div
+                            key={chat.id}
+                            className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+                              chatId === chat.id ? 'bg-accent/100' : ''
+                            } ${openDropdownId === chat.id ? 'bg-accent/100' : ''}`}
+                            onClick={() => {
+                              navigate(`/chat/${chat.id}`);
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            role="button"
+                          >
+                            <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">
+                              {chat.title}
+                            </span>
+
+                            <DropdownMenu
+                              onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="w-8 h-8 p-0 opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-accent shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-44 p-1 rounded-md text-high-emphasis bg-card"
+                                align="start"
+                                side="right"
+                                sideOffset={8}
+                              >
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Share2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('SHARE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('RENAME')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Copy className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('CLONE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  disabled
+                                  className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('ARCHIVE')}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer px-3 py-1.5 rounded-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteHandler(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  <span className="text-sm font-medium">{t('DELETE')}</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </AccordionContent>

@@ -13,6 +13,7 @@ export const useGetConversations = (
     queryFn: ({ pageParam = 0 }) => {
       return conversationService.getConversationList({
         ...payload,
+        is_minimal: false,
         limit: 20,
         offset: pageParam * 1,
       });

@@ -27,6 +27,9 @@ interface ChatMessage {
   metadata?: {
     tool_calls_made?: number;
   };
+  tokenUsage?: {
+    model_name?: string;
+  };
 }
 
 interface Chat {
@@ -283,7 +286,10 @@ export const useChatStore = create<ChatStore>()(
       loadChat: (id, conversations) =>
         set((state) => {
           const chat = state.chats[id] || { ...chatDefaultValue, id };
-          const chatConversations: ChatMessage[] = conversations.flatMap((conversation) => {
+          const chatConversations: ChatMessage[] = conversations.flatMap((conversation: any) => {
+            const tokenUsage = conversation.conversation?.TokenUsage || conversation.TokenUsage;
+            const metadata = conversation.conversation?.Metadata || conversation.Metadata;
+
             return [
               {
                 message: conversation.Query,
@@ -296,9 +302,14 @@ export const useChatStore = create<ChatStore>()(
                 type: 'bot',
                 streaming: false,
                 timestamp: conversation.ResponseTimestamp,
-                metadata: conversation.Metadata
+                metadata: metadata
                   ? {
-                      tool_calls_made: conversation.Metadata.tool_calls_made,
+                      tool_calls_made: metadata.tool_calls_made,
+                    }
+                  : undefined,
+                tokenUsage: tokenUsage
+                  ? {
+                      model_name: tokenUsage.model_name,
                     }
                   : undefined,
               },

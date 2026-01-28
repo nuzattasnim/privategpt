@@ -404,7 +404,7 @@ export const AppSidebar = () => {
         />
       )}
       <Sidebar
-        className={` h-full border-r border-border/50  ${isMobile ? 'mobile-sidebar' : ''}`}
+        className={` h-full border-r border-border/50 w-full sm:w-auto ${isMobile ? 'mobile-sidebar' : ''}`}
         collapsible={isMobile ? 'none' : 'icon'}
         style={sidebarStyle}
       >

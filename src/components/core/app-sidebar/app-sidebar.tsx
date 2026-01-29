@@ -28,6 +28,7 @@ import {
   useDeleteConversationById,
   useGetConversations,
 } from '@/modules/gpt-chats/hooks/use-conversation-api';
+import { useGetAgentConversationList } from '@/modules/gpt-chats/hooks/use-agent-conversation';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -61,6 +62,13 @@ export const AppSidebar = () => {
     project_key: projectKey,
   });
 
+  const { data: agentConversations } = useGetAgentConversationList({
+    agent_id: 'def5605d-501a-4d6f-a403-fcb2c5bdd9cc',
+    project_key: projectKey,
+    limit: 100,
+    offset: 0,
+  });
+
   useEffect(() => {
     if (!isMobile) {
       setOpenMobile(false);
@@ -91,12 +99,28 @@ export const AppSidebar = () => {
             session.conversation?.Title?.slice(0, 35) ||
             session.conversation?.Response?.slice(0, 35) ||
             session.conversation?.Query ||
-            '',
+            'Untitled Chat',
         }));
     });
 
     return allChats;
   }, [data?.pages]);
+
+  const agentChatList = useMemo(() => {
+    if (!agentConversations?.sessions) {
+      return [];
+    }
+
+    return agentConversations.sessions.map((session: any) => ({
+      id: session.id,
+      lastEntryDate: session.last_entry_date,
+      title:
+        session.conversation?.Title?.slice(0, 35) ||
+        session.conversation?.Response?.slice(0, 35) ||
+        session.conversation?.Query ||
+        'Untitled Agent Chat',
+    }));
+  }, [agentConversations]);
 
   const categorizedChats = useMemo(() => {
     const now = new Date();
@@ -431,7 +455,9 @@ export const AppSidebar = () => {
             <AccordionItem value="list" className="border-none">
               <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
                 <div className="flex items-center justify-between w-full pr-2">
-                  <span>{t('YOUR_CHATS')}</span>
+                  {/* <span>{t('YOUR_CHATS')}</span> */}
+                  <span>{t('CHATS_WITH_MODELS')}</span>
+
                   <span className="text-xs text-muted-foreground font-normal">
                     {chatList.length}
                   </span>
@@ -449,7 +475,6 @@ export const AppSidebar = () => {
                       className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
                       style={{ maxHeight: 'calc(100vh - 280px)' }}
                     >
-                      
                       {categorizedChats.today.length > 0 && (
                         <div>
                           <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
@@ -461,7 +486,6 @@ export const AppSidebar = () => {
                         </div>
                       )}
 
-                      
                       {categorizedChats.yesterday.length > 0 && (
                         <div>
                           <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
@@ -473,7 +497,6 @@ export const AppSidebar = () => {
                         </div>
                       )}
 
-                      
                       {categorizedChats.previous7Days.length > 0 && (
                         <div>
                           <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
@@ -485,7 +508,6 @@ export const AppSidebar = () => {
                         </div>
                       )}
 
-                      
                       {categorizedChats.previous30Days.length > 0 && (
                         <div>
                           <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
@@ -497,7 +519,6 @@ export const AppSidebar = () => {
                         </div>
                       )}
 
-                      
                       {categorizedChats.older.length > 0 && (
                         <div>
                           <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
@@ -509,17 +530,40 @@ export const AppSidebar = () => {
                         </div>
                       )}
 
-                      
                       {hasNextPage && <div ref={loadMoreRef} className="h-20 w-full" />}
                     </div>
 
-                    
                     {isFetchingNextPage && (
                       <div className="flex items-center justify-center py-4 mt-2">
                         <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
                       </div>
                     )}
                   </>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="agent-chats" className="border-none">
+              <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
+                <div className="flex items-center justify-between w-full pr-2">
+                  <span>{t('CHATS_WITH_AGENTS')}</span>
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {agentChatList.length}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="overflow-visible">
+                {agentChatList.length === 0 ? (
+                  <p className="text-sm text-muted-foreground mt-2 px-2">
+                    {t('NO_CHATS_AVAILABLE')}
+                  </p>
+                ) : (
+                  <div
+                    className="overflow-y-auto overflow-x-visible pr-1 space-y-1 mt-2"
+                    style={{ maxHeight: 'calc(100vh - 280px)' }}
+                  >
+                    {agentChatList.map((chat) => renderChatItem(chat))}
+                  </div>
                 )}
               </AccordionContent>
             </AccordionItem>

@@ -36,6 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui-kit/dropdown-menu';
+import { useCategorizedChatHistories } from '@/modules/gpt-chats/hooks/use-chat-history-categories';
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
@@ -122,97 +123,8 @@ export const AppSidebar = () => {
     }));
   }, [agentConversations]);
 
-  const categorizedChats = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const categorized = {
-      today: [] as typeof chatList,
-      yesterday: [] as typeof chatList,
-      previous7Days: [] as typeof chatList,
-      previous30Days: [] as typeof chatList,
-      older: [] as typeof chatList,
-    };
-
-    const sorted = [...chatList].sort(
-      (a, b) => new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
-    );
-
-    sorted.forEach((chat) => {
-      const chatDate = new Date(chat.lastEntryDate);
-      const chatDateOnly = new Date(
-        chatDate.getFullYear(),
-        chatDate.getMonth(),
-        chatDate.getDate()
-      );
-
-      if (chatDateOnly.getTime() === today.getTime()) {
-        categorized.today.push(chat);
-      } else if (chatDateOnly.getTime() === yesterday.getTime()) {
-        categorized.yesterday.push(chat);
-      } else if (chatDate >= sevenDaysAgo) {
-        categorized.previous7Days.push(chat);
-      } else if (chatDate >= thirtyDaysAgo) {
-        categorized.previous30Days.push(chat);
-      } else {
-        categorized.older.push(chat);
-      }
-    });
-
-    return categorized;
-  }, [chatList]);
-
-  const categorizedAgentChats = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const categorized = {
-      today: [] as typeof agentChatList,
-      yesterday: [] as typeof agentChatList,
-      previous7Days: [] as typeof agentChatList,
-      previous30Days: [] as typeof agentChatList,
-      older: [] as typeof agentChatList,
-    };
-
-    const sorted = [...agentChatList].sort(
-      (a, b) => new Date(b.lastEntryDate).getTime() - new Date(a.lastEntryDate).getTime()
-    );
-
-    sorted.forEach((chat) => {
-      const chatDate = new Date(chat.lastEntryDate);
-      const chatDateOnly = new Date(
-        chatDate.getFullYear(),
-        chatDate.getMonth(),
-        chatDate.getDate()
-      );
-
-      if (chatDateOnly.getTime() === today.getTime()) {
-        categorized.today.push(chat);
-      } else if (chatDateOnly.getTime() === yesterday.getTime()) {
-        categorized.yesterday.push(chat);
-      } else if (chatDate >= sevenDaysAgo) {
-        categorized.previous7Days.push(chat);
-      } else if (chatDate >= thirtyDaysAgo) {
-        categorized.previous30Days.push(chat);
-      } else {
-        categorized.older.push(chat);
-      }
-    });
-
-    return categorized;
-  }, [agentChatList]);
+  const categorizedChats = useCategorizedChatHistories(chatList);
+  const categorizedAgentChats = useCategorizedChatHistories(agentChatList);
 
   useEffect(() => {
     if (isMobile && !openMobile) {
@@ -515,76 +427,74 @@ export const AppSidebar = () => {
                     {t('NO_CHATS_AVAILABLE')}
                   </p>
                 ) : (
-                  <>
-                    <div
-                      ref={chatListContainerRef}
-                      className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
-                      style={{ maxHeight: 'calc(100vh - 280px)' }}
-                    >
-                      {categorizedChats.today.length > 0 && (
-                        <div>
-                          <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                            {t('TODAY').toUpperCase()}
-                          </h3>
-                          <div className="space-y-1">
-                            {categorizedChats.today.map((chat) => renderChatItem(chat))}
-                          </div>
+                  <div
+                    ref={chatListContainerRef}
+                    className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
+                    style={{ maxHeight: 'calc(100vh - 280px)' }}
+                  >
+                    {categorizedChats.today.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('TODAY').toUpperCase()}
+                        </h3>
+                        <div className="space-y-1">
+                          {categorizedChats.today.map((chat) => renderChatItem(chat))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {categorizedChats.yesterday.length > 0 && (
-                        <div>
-                          <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                            {t('YESTERDAY').toUpperCase()}
-                          </h3>
-                          <div className="space-y-1">
-                            {categorizedChats.yesterday.map((chat) => renderChatItem(chat))}
-                          </div>
+                    {categorizedChats.yesterday.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('YESTERDAY').toUpperCase()}
+                        </h3>
+                        <div className="space-y-1">
+                          {categorizedChats.yesterday.map((chat) => renderChatItem(chat))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {categorizedChats.previous7Days.length > 0 && (
-                        <div>
-                          <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                            {t('PREVIOUS_7_DAYS').toUpperCase()}
-                          </h3>
-                          <div className="space-y-1">
-                            {categorizedChats.previous7Days.map((chat) => renderChatItem(chat))}
-                          </div>
+                    {categorizedChats.previous7Days.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('PREVIOUS_7_DAYS').toUpperCase()}
+                        </h3>
+                        <div className="space-y-1">
+                          {categorizedChats.previous7Days.map((chat) => renderChatItem(chat))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {categorizedChats.previous30Days.length > 0 && (
-                        <div>
-                          <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                            {t('PREVIOUS_30_DAYS').toUpperCase()}
-                          </h3>
-                          <div className="space-y-1">
-                            {categorizedChats.previous30Days.map((chat) => renderChatItem(chat))}
-                          </div>
+                    {categorizedChats.previous30Days.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('PREVIOUS_30_DAYS').toUpperCase()}
+                        </h3>
+                        <div className="space-y-1">
+                          {categorizedChats.previous30Days.map((chat) => renderChatItem(chat))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {categorizedChats.older.length > 0 && (
-                        <div>
-                          <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                            {t('OLDER').toUpperCase()}
-                          </h3>
-                          <div className="space-y-1">
-                            {categorizedChats.older.map((chat) => renderChatItem(chat))}
-                          </div>
+                    {categorizedChats.older.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                          {t('OLDER').toUpperCase()}
+                        </h3>
+                        <div className="space-y-1">
+                          {categorizedChats.older.map((chat) => renderChatItem(chat))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {hasNextPage && <div ref={loadMoreRef} className="h-20 w-full" />}
-                    </div>
+                    {hasNextPage && <div ref={loadMoreRef} className="h-20 w-full" />}
 
                     {isFetchingNextPage && (
-                      <div className="flex items-center justify-center py-4 mt-2">
+                      <div className="flex items-center justify-center py-4">
                         <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </AccordionContent>
             </AccordionItem>

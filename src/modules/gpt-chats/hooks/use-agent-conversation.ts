@@ -1,37 +1,32 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { IAgentConversationListPayload } from '../types/agent-conversation.type';
 import { agentConversationService } from '../services/agent-conversation.service';
 
-export const useGetAgentConversationList = (payload: IAgentConversationListPayload) => {
-  return useQuery({
-    queryKey: ['agent-conversation-list', payload],
-    queryFn: () => agentConversationService.getAgentConversationList(payload),
-    enabled: !!payload.agent_id && !!payload.project_key,
-  });
-};
-
-export const useGetAgentConversationListInfinite = (
-  payload: Omit<IAgentConversationListPayload, 'offset'>
+export const useGetAgentConversationList = (
+  payload: Omit<IAgentConversationListPayload, 'offset' | 'limit'>
 ) => {
   return useInfiniteQuery({
-    queryKey: ['agent-conversation-list-infinite', payload],
-    queryFn: async ({ pageParam = 0 }) => {
-      const result = await agentConversationService.getAgentConversationList({
+    queryKey: ['agent-conversation-list', payload],
+    queryFn: ({ pageParam = 0 }) => {
+      return agentConversationService.getAgentConversationList({
         ...payload,
-        offset: pageParam,
+        // is_minimal: false,
+        limit: 20,
+        offset: pageParam * 1,
       });
-      return result;
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalFetched = allPages.length * 20;
+      if (totalFetched < lastPage.total_count) {
+        return allPages.length;
+      }
+      return undefined;
     },
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
-      const totalFetched = allPages.reduce((sum, page) => sum + page.sessions.length, 0);
-
-      if (totalFetched >= lastPage.total_count || lastPage.sessions.length === 0) {
-        return undefined;
-      }
-
-      return totalFetched;
-    },
-    enabled: !!payload.agent_id && !!payload.project_key,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };

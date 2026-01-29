@@ -28,7 +28,7 @@ import {
   useDeleteConversationById,
   useGetConversations,
 } from '@/modules/gpt-chats/hooks/use-conversation-api';
-import { useGetAgentConversationListInfinite } from '@/modules/gpt-chats/hooks/use-agent-conversation';
+import { useGetAgentConversationList } from '@/modules/gpt-chats/hooks/use-agent-conversation';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -71,10 +71,9 @@ export const AppSidebar = () => {
     fetchNextPage: fetchNextAgentPage,
     hasNextPage: hasNextAgentPage,
     isFetchingNextPage: isFetchingNextAgentPage,
-  } = useGetAgentConversationListInfinite({
+  } = useGetAgentConversationList({
     agent_id: 'def5605d-501a-4d6f-a403-fcb2c5bdd9cc',
     project_key: projectKey,
-    limit: 20,
   });
 
   useEffect(() => {
@@ -551,7 +550,8 @@ export const AppSidebar = () => {
             <span>{t('NEW_CHAT')}</span>
           </Button>
 
-          <Accordion type="single" collapsible defaultValue="list">
+          <Accordion type="multiple" defaultValue={['list', 'agent-chats']}>
+            {' '}
             <AccordionItem value="list" className="border-none">
               <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
                 <div className="flex items-center justify-between w-full pr-2">
@@ -640,7 +640,6 @@ export const AppSidebar = () => {
                 )}
               </AccordionContent>
             </AccordionItem>
-
             <AccordionItem value="agent-chats" className="border-none">
               <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
                 <div className="flex items-center justify-between w-full pr-2">

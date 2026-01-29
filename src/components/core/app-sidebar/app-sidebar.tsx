@@ -28,7 +28,7 @@ import {
   useDeleteConversationById,
   useGetConversations,
 } from '@/modules/gpt-chats/hooks/use-conversation-api';
-import { useGetAgentConversationList } from '@/modules/gpt-chats/hooks/use-agent-conversation';
+import { useGetAgentConversationListInfinite } from '@/modules/gpt-chats/hooks/use-agent-conversation';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -56,6 +56,9 @@ export const AppSidebar = () => {
   const accordionContentRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const chatListContainerRef = useRef<HTMLDivElement>(null);
+  const agentAccordionContentRef = useRef<HTMLDivElement>(null);
+  const agentLoadMoreRef = useRef<HTMLDivElement>(null);
+  const agentChatListContainerRef = useRef<HTMLDivElement>(null);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetConversations({
     allow_created_by_filter: true,
@@ -63,11 +66,15 @@ export const AppSidebar = () => {
     project_key: projectKey,
   });
 
-  const { data: agentConversations } = useGetAgentConversationList({
+  const {
+    data: agentConversationsData,
+    fetchNextPage: fetchNextAgentPage,
+    hasNextPage: hasNextAgentPage,
+    isFetchingNextPage: isFetchingNextAgentPage,
+  } = useGetAgentConversationListInfinite({
     agent_id: 'def5605d-501a-4d6f-a403-fcb2c5bdd9cc',
     project_key: projectKey,
-    limit: 100,
-    offset: 0,
+    limit: 20,
   });
 
   useEffect(() => {
@@ -108,20 +115,38 @@ export const AppSidebar = () => {
   }, [data?.pages]);
 
   const agentChatList = useMemo(() => {
-    if (!agentConversations?.sessions) {
+    if (!agentConversationsData?.pages) {
       return [];
     }
 
-    return agentConversations.sessions.map((session: any) => ({
-      id: session.id,
-      lastEntryDate: session.last_entry_date,
-      title:
-        session.conversation?.Title?.slice(0, 35) ||
-        session.conversation?.Response?.slice(0, 35) ||
-        session.conversation?.Query ||
-        'Untitled Agent Chat',
-    }));
-  }, [agentConversations]);
+    const seenIds = new Set<string>();
+    const allAgentChats = agentConversationsData.pages.flatMap((page) => {
+      const filtered = page.sessions.filter((session: any) => {
+        const sessionId = session.session_id;
+        if (!sessionId) {
+          return false;
+        }
+        if (seenIds.has(sessionId)) {
+          return false;
+        }
+        seenIds.add(sessionId);
+        return true;
+      });
+
+      const mapped = filtered.map((session: any) => ({
+        id: session.session_id,
+        lastEntryDate: session.last_entry_date,
+        title:
+          session.conversation?.Title?.slice(0, 35) ||
+          session.conversation?.Response?.slice(0, 35) ||
+          session.conversation?.Query ||
+          'Untitled Agent Chat',
+      }));
+      return mapped;
+    });
+
+    return allAgentChats;
+  }, [agentConversationsData?.pages]);
 
   const categorizedChats = useCategorizedChatHistories(chatList);
   const categorizedAgentChats = useCategorizedChatHistories(agentChatList);
@@ -233,6 +258,123 @@ export const AppSidebar = () => {
       timeouts.forEach(clearTimeout);
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, isMobile, openMobile]);
+
+  // Intersection Observer for agent chats
+  useEffect(() => {
+    if (isMobile && !openMobile) {
+      return;
+    }
+
+    const setupAgentObserver = () => {
+      const currentLoadMoreRef = agentLoadMoreRef.current;
+      const scrollContainer = agentChatListContainerRef.current;
+
+      if (!currentLoadMoreRef || !scrollContainer) {
+        return null;
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && hasNextAgentPage && !isFetchingNextAgentPage) {
+              fetchNextAgentPage();
+            }
+          });
+        },
+        {
+          root: scrollContainer,
+          rootMargin: '200px',
+          threshold: 0.1,
+        }
+      );
+
+      observer.observe(currentLoadMoreRef);
+      return observer;
+    };
+
+    let observer = setupAgentObserver();
+    const timeouts: NodeJS.Timeout[] = [];
+
+    if (!observer) {
+      const delays = isMobile ? [100, 300, 500, 1000] : [100, 300];
+      delays.forEach((delay) => {
+        const timeout = setTimeout(() => {
+          if (!observer) {
+            observer = setupAgentObserver();
+          }
+        }, delay);
+        timeouts.push(timeout);
+      });
+    }
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+      timeouts.forEach(clearTimeout);
+    };
+  }, [
+    hasNextAgentPage,
+    isFetchingNextAgentPage,
+    fetchNextAgentPage,
+    agentChatList.length,
+    isMobile,
+    openMobile,
+  ]);
+
+  // Scroll listener for agent chats
+  useEffect(() => {
+    if (isMobile && !openMobile) {
+      return;
+    }
+
+    const setupAgentScrollListener = () => {
+      const scrollContainer = agentChatListContainerRef.current;
+
+      if (!scrollContainer) {
+        return null;
+      }
+
+      const handleScroll = () => {
+        const scrollTop = scrollContainer.scrollTop;
+        const scrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+
+        if (scrollPercentage > 0.75 && hasNextAgentPage && !isFetchingNextAgentPage) {
+          fetchNextAgentPage();
+        }
+      };
+
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      };
+    };
+
+    let cleanup = setupAgentScrollListener();
+    const timeouts: NodeJS.Timeout[] = [];
+
+    if (!cleanup) {
+      const delays = isMobile ? [100, 300, 500, 1000] : [100, 300];
+      delays.forEach((delay) => {
+        const timeout = setTimeout(() => {
+          if (!cleanup) {
+            cleanup = setupAgentScrollListener();
+          }
+        }, delay);
+        timeouts.push(timeout);
+      });
+    }
+
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+      timeouts.forEach(clearTimeout);
+    };
+  }, [hasNextAgentPage, isFetchingNextAgentPage, fetchNextAgentPage, isMobile, openMobile]);
 
   const handleNewChat = () => {
     navigate('/chat');
@@ -508,13 +650,14 @@ export const AppSidebar = () => {
                   </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="overflow-visible">
+              <AccordionContent className="overflow-visible" ref={agentAccordionContentRef}>
                 {agentChatList.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2 px-2">
                     {t('NO_CHATS_AVAILABLE')}
                   </p>
                 ) : (
                   <div
+                    ref={agentChatListContainerRef}
                     className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
                     style={{ maxHeight: 'calc(100vh - 280px)' }}
                   >
@@ -570,6 +713,14 @@ export const AppSidebar = () => {
                         <div className="space-y-1">
                           {categorizedAgentChats.older.map((chat) => renderChatItem(chat))}
                         </div>
+                      </div>
+                    )}
+
+                    {hasNextAgentPage && <div ref={agentLoadMoreRef} className="h-20 w-full" />}
+
+                    {isFetchingNextAgentPage && (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
                       </div>
                     )}
                   </div>

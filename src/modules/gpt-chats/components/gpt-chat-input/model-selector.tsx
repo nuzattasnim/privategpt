@@ -7,11 +7,13 @@ import { useGetCustomLlmModels, useGetLlmModels } from '@/modules/gpt-chats/hook
 import { formatProviderName, getProviderConfig } from '../../utils/model-selector';
 import { SelectModelType } from '../../hooks/use-chat-store';
 import { useTranslation } from 'react-i18next';
+import { useGetAgents } from '../../hooks/use-agents';
 
 type GroupModel = {
   provider: string;
   label: string;
   isBlocksModels: boolean;
+  isAgents?: boolean;
   models: {
     model: string;
     label: string;
@@ -36,6 +38,11 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
     error: customError,
   } = useGetCustomLlmModels();
   const { data: blocksModels, isLoading: isLoadingBlocks, error: blocksError } = useGetLlmModels();
+  const { data: agentsData } = useGetAgents({
+    limit: 100,
+    offset: 0,
+    project_key: import.meta.env.VITE_X_BLOCKS_KEY,
+  });
 
   const isLoading = isLoadingCustom || isLoadingBlocks;
   const hasError = customError && blocksError;
@@ -53,6 +60,7 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
           provider: provider,
           label: formatProviderName(model.provider_label || model.provider),
           isBlocksModels: true,
+          isAgents: false,
           models: [],
         };
       }
@@ -70,6 +78,7 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
           provider: provider,
           label: formatProviderName(model.Provider),
           isBlocksModels: false,
+          isAgents: false,
           models: [],
         };
       }
@@ -80,8 +89,23 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
       });
     });
 
+    // Add agents as a provider
+    if (agentsData?.agents && agentsData.agents.length > 0) {
+      allModels['agents'] = {
+        provider: 'agents',
+        label: 'Agents',
+        isBlocksModels: false,
+        isAgents: true,
+        models: agentsData.agents.map((agent: any) => ({
+          model: agent.agent_key || agent.id,
+          label: agent.agent_name || agent.name,
+          type: 'agent',
+        })),
+      };
+    }
+
     return allModels;
-  }, [customModels, blocksModels]);
+  }, [customModels, blocksModels, agentsData]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -282,7 +306,9 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate flex-1">
-                    {selectedProviderGroup.label} Models ({selectedProviderGroup.models.length})
+                    {selectedProviderGroup.label}{' '}
+                    {selectedProviderGroup.isAgents ? 'Agents' : 'Models'} (
+                    {selectedProviderGroup.models.length})
                   </p>
                 </div>
 

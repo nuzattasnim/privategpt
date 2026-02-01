@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -16,6 +16,13 @@ import { useToast } from '@/hooks/use-toast';
 import { HttpError } from '@/lib/https';
 import { useGetMultiOrgs } from '@/lib/api/hooks/use-multi-orgs';
 import { decodeJWT } from '@/lib/utils/decode-jwt-utils';
+import { Button } from '@/components/ui-kit/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui-kit/tooltip';
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 
@@ -119,54 +126,110 @@ export const OrgSwitcher = () => {
 
   return (
     <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-      <DropdownMenuTrigger asChild className="cursor-pointer p-1 rounded-[2px]">
-        <div className="flex justify-between items-center gap-1 sm:gap-3 cursor-pointer">
-          <div className="flex items-center">
-            {isComponentLoading ? (
-              <Skeleton className="h-8 w-8 rounded-full" />
-            ) : (
-              <Building2 className="h-5 w-5 text-medium-emphasis" />
-            )}
-          </div>
-          <div className="flex flex-col">
-            {isComponentLoading ? (
-              <>
-                <Skeleton className="w-24 h-4 mb-1" />
-                <Skeleton className="w-16 h-3" />
-              </>
-            ) : (
-              <>
-                <h2 className="text-xs font-normal text-high-emphasis">
-                  {selectedOrg?.name ?? '_'}
-                </h2>
-                <p className="text-[10px] text-low-emphasis capitalize">{translatedRoles}</p>
-              </>
-            )}
-          </div>
-          {isDropdownOpen ? (
-            <ChevronUp className="h-5 w-5 text-medium-emphasis" />
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-auto py-1.5 px-3 gap-2.5 hover:bg-surface/80"
+          disabled={isComponentLoading}
+        >
+          {isComponentLoading ? (
+            <>
+              <Skeleton className="h-4 w-4 rounded flex-shrink-0" />
+              <div className="hidden sm:flex flex-col items-start gap-0.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-2.5 w-16" />
+              </div>
+            </>
           ) : (
-            <ChevronDown className="h-5 w-5 text-medium-emphasis" />
+            <>
+              <Building2 className="h-4 w-4 text-medium-emphasis flex-shrink-0" />
+
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="hidden sm:flex flex-col items-start min-w-0">
+                      <span className="text-sm font-medium text-high-emphasis max-w-[120px] md:max-w-[160px] lg:max-w-[200px] truncate block leading-[1.1]">
+                        {selectedOrg?.name ?? '_'}
+                      </span>
+                      <span className="text-[10px] text-low-emphasis capitalize block leading-[1.1] mt-1">
+                        {translatedRoles || 'No role'}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  {selectedOrg?.name && selectedOrg.name.length > 20 && (
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="text-xs font-medium">{selectedOrg.name}</p>
+                      {translatedRoles && (
+                        <p className="text-[10px] text-low-emphasis capitalize mt-0.5">
+                          {translatedRoles}
+                        </p>
+                      )}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </>
+          )}
+
+          <ChevronDown className="h-3.5 w-3.5 text-medium-emphasis opacity-50 flex-shrink-0" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent className="w-72" align="end" sideOffset={8}>
+        <div className="px-2 py-1.5">
+          <p className="text-xs font-medium text-medium-emphasis">{t('SWITCH_ORGANIZATION')}</p>
+        </div>
+        <DropdownMenuSeparator />
+
+        <div className="max-h-[300px] overflow-y-auto">
+          {enabledOrganizations.length > 0 ? (
+            enabledOrganizations.map((org) => {
+              const membership = data?.memberships?.find((m) => m.organizationId === org.itemId);
+              const orgRoles = membership?.roles ?? [];
+              const translatedOrgRoles = orgRoles
+                .map((role: string) => t(role.toUpperCase()))
+                .join(', ');
+
+              const isSelected = org.itemId === currentOrgId;
+
+              return (
+                <DropdownMenuItem
+                  key={org.itemId}
+                  onClick={() => handleOrgSelect(org.itemId)}
+                  className="flex flex-col items-start gap-1 py-2.5 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {isSelected ? (
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 flex-shrink-0" />
+                    )}
+                    <span
+                      className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-high-emphasis'}`}
+                    >
+                      {org.name}
+                    </span>
+                  </div>
+                  {translatedOrgRoles && (
+                    <span className="text-[10px] text-low-emphasis capitalize ml-6 truncate w-full">
+                      {translatedOrgRoles}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              );
+            })
+          ) : (
+            <DropdownMenuItem disabled>
+              <span className="text-sm text-medium-emphasis">{t('NO_ORGANIZATIONS_FOUND')}</span>
+            </DropdownMenuItem>
           )}
         </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-56 text-medium-emphasis"
-        align="end"
-        side="top"
-        sideOffset={10}
-      >
-        {enabledOrganizations.length > 0 ? (
-          enabledOrganizations.map((org) => (
-            <DropdownMenuItem key={org.itemId} onClick={() => handleOrgSelect(org.itemId)}>
-              {org.name}
-            </DropdownMenuItem>
-          ))
-        ) : (
-          <DropdownMenuItem>No orgs found</DropdownMenuItem>
-        )}
+
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>{t('CREATE_NEW')}</DropdownMenuItem>
+        <DropdownMenuItem disabled className="text-xs cursor-not-allowed">
+          <Plus className="h-3.5 w-3.5 mr-2" />
+          {t('CREATE_NEW')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,7 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarTrigger, useSidebar } from '@/components/ui-kit/sidebar';
-import { Menubar, MenubarMenu } from '@/components/ui-kit/menubar';
-import { LanguageSelector, ProfileMenu, AppSidebar } from '@/components/core';
+import { ProfileMenu, AppSidebar } from '@/components/core';
 import { OrgSwitcher } from '@/components/core/org-switcher/org-switcher';
 
 export const MainLayout = () => {
@@ -26,27 +25,31 @@ export const MainLayout = () => {
       </div>
 
       <div
-        className={`flex flex-col w-full h-full ${
-          marginClass
-        } transition-[margin-left] duration-300 ease-in-out`}
+        className={`flex flex-col w-full h-full ${marginClass} transition-[margin-left] duration-300 ease-in-out`}
       >
-        <div className="sticky bg-sidebar  z-20 top-0 border-b py-2 px-4 sm:px-6 md:px-8 flex justify-between items-center w-full">
-          <div className="flex items-center">
-            {' '}
-            {isMobile && <SidebarTrigger className="pl-0" />}
-          </div>
+        {/* Modern, cleaner navbar */}
+        <header className="sticky bg-sidebar/95 backdrop-blur-sm supports-[backdrop-filter]:bg-sidebar/60 z-20 top-0 border-b border-border/40">
+          <div className="flex h-14 items-center justify-between px-4 sm:px-6 md:px-8 gap-4">
+            {/* Left section */}
+            <div className="flex items-center gap-2">
+              {isMobile && <SidebarTrigger className="p-0" />}
+              {/* You can add breadcrumbs or page title here */}
+            </div>
 
-          <div className="flex justify-between items-center gap-1 sm:gap-3 md:gap-8">
-            <Menubar className="border-none p-0">
-              <MenubarMenu></MenubarMenu>
-            </Menubar>
-            <LanguageSelector />
-            <OrgSwitcher />
-            <ProfileMenu />
+            {/* Right section - simplified */}
+            <div className="flex items-center gap-1">
+              <OrgSwitcher />
+              <div className="h-6 w-px bg-border/50 mx-1 hidden sm:block" />
+              <ProfileMenu />
+            </div>
           </div>
-        </div>
+        </header>
+
+        {/* Main content */}
         <div
-          className={`flex h-full bg-surface ${!isEmailRoute && !isChatRoute && 'p-4 sm:p-6 md:p-8'} ${open && !isMobile ? 'w-[calc(100dvw-var(--sidebar-width))]' : 'w-full'}`}
+          className={`flex h-full bg-surface ${
+            !isEmailRoute && !isChatRoute && 'p-4 sm:p-6 md:p-8'
+          } ${open && !isMobile ? 'w-[calc(100dvw-var(--sidebar-width))]' : 'w-full'}`}
         >
           <Outlet />
         </div>

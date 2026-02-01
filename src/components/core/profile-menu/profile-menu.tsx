@@ -66,21 +66,18 @@ export const ProfileMenu = () => {
     isLoading: isLoadingLangs,
   } = useLanguageContext();
 
-  // Get current organization ID from token
   const currentOrgId = useMemo(() => {
     if (!accessToken) return null;
     const decoded = decodeJWT(accessToken);
     return decoded?.org_id ?? null;
   }, [accessToken]);
 
-  // Get organization-specific roles
   const currentOrgRoles = useMemo(() => {
     if (!data?.memberships?.length || !currentOrgId) return [];
     const membership = data.memberships.find((m) => m.organizationId === currentOrgId);
     return membership?.roles ?? [];
   }, [data, currentOrgId]);
 
-  // Get current organization name
   const { data: orgsData } = useGetMultiOrgs({
     ProjectKey: projectKey,
     Page: 0,
@@ -108,7 +105,6 @@ export const ProfileMenu = () => {
   const fullName = `${data?.firstName ?? ''} ${data?.lastName ?? ''}`.trim() || 'User';
   const email = data?.email ?? '';
 
-  // Translate organization-specific roles
   const translatedOrgRoles = currentOrgRoles
     .map((role: string) => {
       const roleKey = role.toUpperCase();
@@ -136,8 +132,8 @@ export const ProfileMenu = () => {
   return (
     <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-9 px-2 gap-2 hover:bg-surface/80">
-          <div className="relative h-7 w-7 rounded-full border border-border/50 overflow-hidden">
+        <Button variant="ghost" className="h-9 px-2 gap-2 border-none">
+          <div className="relative h-7 w-7 rounded-full overflow-hidden">
             {isLoading ? (
               <Skeleton className="h-7 w-7 rounded-full" />
             ) : (
@@ -162,9 +158,8 @@ export const ProfileMenu = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64" align="end" sideOffset={8}>
-        {/* User Info Section with Org-specific roles */}
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="relative h-10 w-10 rounded-full border-2 border-primary/20 overflow-hidden">
+          <div className="relative h-10 w-10 rounded-full border-2  overflow-hidden">
             <img
               src={data?.profileImageUrl || DummyProfile}
               alt={fullName}
@@ -189,7 +184,6 @@ export const ProfileMenu = () => {
 
         <DropdownMenuSeparator />
 
-        {/* Account Actions */}
         <DropdownMenuItem onClick={() => navigate('profile')} className="cursor-pointer">
           <User className="h-4 w-4 mr-2" />
           {t('MY_PROFILE')}
@@ -200,12 +194,16 @@ export const ProfileMenu = () => {
         {/* Language Submenu */}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Languages className="h-4 w-4 mr-2" />
-            <span>{t('LANGUAGE')}</span>
-            <span className="ml-auto text-xs text-medium-emphasis">
-              {availableLanguages?.find((lang) => lang.languageCode === currentLanguage)
-                ?.languageName || currentLanguage}
-            </span>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <Languages className="h-4 w-4 mr-2" />
+                <span>{t('LANGUAGE')}</span>
+              </div>
+              <span className="text-xs text-medium-emphasis">
+                {availableLanguages?.find((lang) => lang.languageCode === currentLanguage)
+                  ?.languageName || currentLanguage}
+              </span>
+            </div>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             {isLoadingLangs ? (
@@ -248,7 +246,6 @@ export const ProfileMenu = () => {
 
         <DropdownMenuSeparator />
 
-        {/* Other Links */}
         <DropdownMenuItem disabled>
           <Info className="h-4 w-4 mr-2" />
           {t('ABOUT')}

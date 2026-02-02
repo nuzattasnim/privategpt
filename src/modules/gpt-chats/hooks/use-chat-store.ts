@@ -76,6 +76,12 @@ interface ChatStore {
     navigate: NavigateFunction
   ) => void;
   loadChat: (id: string, conversations: Conversation[]) => void;
+  loadAgentChat: (
+    id: string,
+    conversations: Conversation[],
+    agentId: string,
+    widgetId?: string
+  ) => void;
   setSessionId: (id: string, sessionId: string) => void;
   addUserMessage: (id: string, message: string) => void;
   initiateBotMessage: (id: string, chunk: string) => void;
@@ -339,6 +345,61 @@ export const useChatStore = create<ChatStore>()(
                 lastUpdated: new Date().toISOString(),
                 isBotThinking: false,
                 isBotStreaming: false,
+              },
+            },
+            activeChatId: conversations[0].SessionId,
+          };
+        }),
+
+      loadAgentChat: (id, conversations, agentId, widgetId) =>
+        set((state) => {
+          const chat = state.chats[id] || { ...chatDefaultValue, id };
+          const chatConversations: ChatMessage[] = conversations.flatMap((conversation: any) => {
+            const tokenUsage = conversation.conversation?.TokenUsage || conversation.TokenUsage;
+            const metadata = conversation.conversation?.Metadata || conversation.Metadata;
+
+            return [
+              {
+                message: conversation.Query,
+                type: 'user',
+                streaming: false,
+                timestamp: conversation.QueryTimestamp,
+              },
+              {
+                message: conversation.Response,
+                type: 'bot',
+                streaming: false,
+                timestamp: conversation.ResponseTimestamp,
+                metadata: metadata
+                  ? {
+                      tool_calls_made: metadata.tool_calls_made,
+                    }
+                  : undefined,
+                tokenUsage: tokenUsage
+                  ? {
+                      model_name: tokenUsage.model_name,
+                    }
+                  : undefined,
+              },
+            ];
+          });
+
+          return {
+            chats: {
+              ...state.chats,
+              [id]: {
+                ...chat,
+                sessionId: conversations[0].SessionId,
+                conversations: chatConversations,
+                lastUpdated: new Date().toISOString(),
+                isBotThinking: false,
+                isBotStreaming: false,
+                selectedModel: {
+                  isBlocksModels: false,
+                  provider: 'agents',
+                  model: agentId,
+                  widget_id: widgetId,
+                },
               },
             },
             activeChatId: conversations[0].SessionId,

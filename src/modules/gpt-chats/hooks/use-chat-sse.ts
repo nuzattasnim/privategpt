@@ -18,6 +18,7 @@ export const useChatSSE = ({ chatId = '', agentId = null }: UseChatSSE) => {
   const {
     chats,
     loadChat,
+    loadAgentChat,
     generateBotMessage: generateFromStore,
     sendMessage: sendFromStore,
     setSelectedModel,
@@ -64,12 +65,19 @@ export const useChatSSE = ({ chatId = '', agentId = null }: UseChatSSE) => {
     if (activeChatId && activeChatId != 'new' && data) {
       if (data.total_count > 0) {
         const conversationData = data.sessions;
-        if (!isAgentChat) {
+        if (isAgentChat && agentId) {
+          const firstSession = conversationData[0];
+          const widgetId =
+            firstSession && 'widget_id' in firstSession
+              ? (firstSession as { widget_id?: string }).widget_id
+              : undefined;
+          loadAgentChat(activeChatId, conversationData as Conversation[], agentId, widgetId);
+        } else {
           loadChat(activeChatId, conversationData as Conversation[]);
         }
       }
     }
-  }, [activeChatId, data, isAgentChat, loadChat]);
+  }, [activeChatId, data, isAgentChat, agentId, loadChat, loadAgentChat]);
 
   const generateBotMessage = useCallback(
     async (data: { message: string }) => {

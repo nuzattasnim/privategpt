@@ -25,6 +25,7 @@ export const AgentChatAccordion = ({
 }: AgentChatAccordionProps) => {
   const agentId = agent.agent_key || agent.id;
   const agentName = agent.agent_name || agent.name || 'Unnamed Agent';
+  const widgetId = agent.widget_id;
   const navigate = useNavigate();
 
   const renderAgentChatItem = (chat: any) => (
@@ -34,7 +35,7 @@ export const AgentChatAccordion = ({
         chatId === chat.id ? 'bg-accent/100' : ''
       }`}
       onClick={() => {
-        navigate(`/chat/${chat.id}?agent=${agentId}`);
+        navigate(`/chat/${chat.id}?agent=${agentId}&widget=${widgetId}`);
         if (isMobile) {
           setOpenMobile(false);
         }

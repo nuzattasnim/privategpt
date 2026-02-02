@@ -8,12 +8,13 @@ import { Conversation } from '../types/conversation.service.type';
 interface UseChatSSE {
   chatId?: string;
   agentId?: string | null;
+  widgetId?: string | null;
 }
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
 
-export const useChatSSE = ({ chatId = '', agentId = null }: UseChatSSE) => {
+export const useChatSSE = ({ chatId = '', agentId = null, widgetId = null }: UseChatSSE) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const {
     chats,
@@ -66,18 +67,18 @@ export const useChatSSE = ({ chatId = '', agentId = null }: UseChatSSE) => {
       if (data.total_count > 0) {
         const conversationData = data.sessions;
         if (isAgentChat && agentId) {
-          const firstSession = conversationData[0];
-          const widgetId =
-            firstSession && 'widget_id' in firstSession
-              ? (firstSession as { widget_id?: string }).widget_id
-              : undefined;
-          loadAgentChat(activeChatId, conversationData as Conversation[], agentId, widgetId);
+          loadAgentChat(
+            activeChatId,
+            conversationData as Conversation[],
+            agentId,
+            widgetId || undefined
+          );
         } else {
           loadChat(activeChatId, conversationData as Conversation[]);
         }
       }
     }
-  }, [activeChatId, data, isAgentChat, agentId, loadChat, loadAgentChat]);
+  }, [activeChatId, data, isAgentChat, agentId, widgetId, loadChat, loadAgentChat]);
 
   const generateBotMessage = useCallback(
     async (data: { message: string }) => {

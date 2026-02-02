@@ -85,6 +85,7 @@ export const GptChatPageDetails = () => {
   const { chatId } = useParams();
   const [searchParams] = useSearchParams();
   const agentId = searchParams.get('agent');
+  const widgetId = searchParams.get('widget');
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data } = useGetAccount();
@@ -103,6 +104,7 @@ export const GptChatPageDetails = () => {
   } = useChatSSE({
     chatId,
     agentId,
+    widgetId,
   });
 
   // useEffect(() => {

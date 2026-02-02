@@ -5,7 +5,6 @@ import { useGetAgentConversationList } from '../../hooks/use-agent-conversation'
 import { useCategorizedChatHistories } from '../../hooks/use-chat-history-categories';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui-kit/button';
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 
@@ -80,7 +79,19 @@ export const AgentChatAccordion = ({
   const handleNewAgentChat = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    navigate(`/chat?agent=${agentId}`);
+
+    const agentModel = {
+      isBlocksModels: false,
+      provider: 'agents',
+      model: agentId,
+      widget_id: agent.widget_id,
+    };
+    navigate(`/chat`, {
+      state: {
+        selectedModel: agentModel,
+      },
+    });
+
     if (isMobile) {
       setOpenMobile(false);
     }
@@ -210,19 +221,22 @@ export const AgentChatAccordion = ({
             {agentName}
           </span>
 
-          <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
-            ({agentChatList.length})
-          </span>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 hover:bg-primary/10 transition-colors flex-shrink-0"
+          {/* Changed from Button to div with button styling */}
+          <div
+            role="button"
+            tabIndex={0}
+            className="h-6 w-6 p-0 hover:bg-primary/10 transition-colors flex-shrink-0 flex items-center justify-center rounded-md cursor-pointer"
             onClick={handleNewAgentChat}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleNewAgentChat(e as any);
+              }
+            }}
             title={`New chat with ${agentName}`}
           >
             <Plus className="h-3.5 w-3.5 text-primary" />
-          </Button>
+          </div>
 
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 flex-shrink-0 group-data-[state=open]/trigger:rotate-90" />
         </div>

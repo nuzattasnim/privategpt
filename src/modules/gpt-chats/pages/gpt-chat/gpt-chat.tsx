@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // import { Button } from '@/components/ui-kit/button';
 import { SelectModelType, useChatStore } from '@/modules/gpt-chats/hooks/use-chat-store';
 // import {
@@ -16,7 +16,7 @@ import { SelectModelType, useChatStore } from '@/modules/gpt-chats/hooks/use-cha
 //   Globe,
 // } from 'lucide-react';
 import { GptChatInput } from '@/modules/gpt-chats/components/gpt-chat-input/gpt-chat-input';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 // const categoryPrompts: Record<
@@ -138,15 +138,34 @@ import { useTranslation } from 'react-i18next';
 
 export const GptChatPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   // const [selectedCategory, setSelectedCategory] = useState<string>('learn');
+
   const [selectModel, setSelectedModel] = useState<SelectModelType>({
     isBlocksModels: true,
     provider: 'azure',
     model: 'gpt-4o-mini',
   });
+
+  useEffect(() => {
+    const navigationState = location.state as { selectedModel?: SelectModelType } | null;
+
+    if (navigationState?.selectedModel) {
+      setSelectedModel(navigationState.selectedModel);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const { startChat } = useChatStore();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (location.state?.selectedModel) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const handleSendMessage = (message: string) => {
     if (message.trim()) {

@@ -2,15 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { onlineManager } from '@tanstack/react-query';
 import { SelectModelType, useChatStore } from './use-chat-store';
 import { useGetConversationById } from './use-conversation-api';
+import { useGetAgentConversationSessionById } from './use-agent-conversation';
+import { Conversation } from '../types/conversation.service.type';
 
 interface UseChatSSE {
   chatId?: string;
+  agentId?: string | null;
 }
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
 
-export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
+export const useChatSSE = ({ chatId = '', agentId = null }: UseChatSSE) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const {
     chats,
@@ -33,24 +36,40 @@ export const useChatSSE = ({ chatId = '' }: UseChatSSE) => {
   const isBotStreaming = chat.isBotStreaming || false;
   const isBotThinking = chat.isBotThinking || false;
   const currentEvent = chat?.currentEvent || null;
+  const isAgentChat = !!agentId;
 
-  const { data, isFetching } = useGetConversationById({
+  const { data: modelChatData, isFetching: isFetchingModelChat } = useGetConversationById({
     allow_created_by_filter: true,
     call_from: projectSlug,
     project_key: projectKey,
     session_id: activeChatId,
     limit: 100,
     offset: 0,
+    enabled: !isAgentChat && activeChatId !== 'new',
   });
+
+  const { data: agentChatData, isFetching: isFetchingAgentChat } =
+    useGetAgentConversationSessionById({
+      project_key: projectKey,
+      session_id: activeChatId,
+      agent_id: agentId || '',
+      limit: 100,
+      offset: 0,
+    });
+
+  const data = isAgentChat ? agentChatData : modelChatData;
+  const isFetching = isAgentChat ? isFetchingAgentChat : isFetchingModelChat;
 
   useEffect(() => {
     if (activeChatId && activeChatId != 'new' && data) {
       if (data.total_count > 0) {
         const conversationData = data.sessions;
-        loadChat(activeChatId, conversationData);
+        if (!isAgentChat) {
+          loadChat(activeChatId, conversationData as Conversation[]);
+        }
       }
     }
-  }, [activeChatId, data, loadChat]);
+  }, [activeChatId, data, isAgentChat, loadChat]);
 
   const generateBotMessage = useCallback(
     async (data: { message: string }) => {

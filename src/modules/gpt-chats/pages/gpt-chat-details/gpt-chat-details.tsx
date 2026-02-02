@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
 import { Clipboard, Check, Zap } from 'lucide-react';
 import {
@@ -83,6 +83,8 @@ const ChatEventMessageIndicator = ({ message }: { message: string }) => (
 
 export const GptChatPageDetails = () => {
   const { chatId } = useParams();
+  const [searchParams] = useSearchParams();
+  const agentId = searchParams.get('agent');
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data } = useGetAccount();
@@ -100,6 +102,7 @@ export const GptChatPageDetails = () => {
     currentEvent,
   } = useChatSSE({
     chatId,
+    agentId,
   });
 
   // useEffect(() => {

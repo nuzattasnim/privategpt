@@ -111,7 +111,7 @@ export interface IAgentConversationListResponse {
 }
 
 export interface IAgentConversationByIdPayload {
-  widget_id: string;
+  widget_id?: string;
   session_id: string;
   agent_id: string;
   limit: number;

@@ -19,14 +19,31 @@ interface AgentChatAccordionProps {
 
 export const AgentChatAccordion = ({
   agent,
-
-  renderChatCategory,
+  chatId,
   isMobile,
   setOpenMobile,
 }: AgentChatAccordionProps) => {
   const agentId = agent.agent_key || agent.id;
   const agentName = agent.agent_name || agent.name || 'Unnamed Agent';
   const navigate = useNavigate();
+
+  const renderAgentChatItem = (chat: any) => (
+    <div
+      key={chat.id}
+      className={`rounded-lg hover:bg-accent/100 cursor-pointer flex justify-between items-center h-fit group/item px-2 py-1 transition-colors ${
+        chatId === chat.id ? 'bg-accent/100' : ''
+      }`}
+      onClick={() => {
+        navigate(`/chat/${chat.id}?agent=${agentId}`);
+        if (isMobile) {
+          setOpenMobile(false);
+        }
+      }}
+      role="button"
+    >
+      <span className="text-sm text-high-emphasis truncate block flex-1 pr-2">{chat.title}</span>
+    </div>
+  );
 
   const agentChatListContainerRef = useRef<HTMLDivElement>(null);
   const agentLoadMoreRef = useRef<HTMLDivElement>(null);
@@ -221,7 +238,6 @@ export const AgentChatAccordion = ({
             {agentName}
           </span>
 
-          {/* Changed from Button to div with button styling */}
           <div
             role="button"
             tabIndex={0}
@@ -253,11 +269,50 @@ export const AgentChatAccordion = ({
             className="overflow-y-auto overflow-x-visible space-y-4 pl-1"
             style={{ maxHeight: 'calc(100vh - 400px)' }}
           >
-            {renderChatCategory(categorizedAgentChats.today, 'TODAY')}
-            {renderChatCategory(categorizedAgentChats.yesterday, 'YESTERDAY')}
-            {renderChatCategory(categorizedAgentChats.previous7Days, 'PREVIOUS_7_DAYS')}
-            {renderChatCategory(categorizedAgentChats.previous30Days, 'PREVIOUS_30_DAYS')}
-            {renderChatCategory(categorizedAgentChats.older, 'OLDER')}
+            {categorizedAgentChats.today.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">TODAY</h3>
+                <div className="space-y-1">
+                  {categorizedAgentChats.today.map(renderAgentChatItem)}
+                </div>
+              </div>
+            )}
+            {categorizedAgentChats.yesterday.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">YESTERDAY</h3>
+                <div className="space-y-1">
+                  {categorizedAgentChats.yesterday.map(renderAgentChatItem)}
+                </div>
+              </div>
+            )}
+            {categorizedAgentChats.previous7Days.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                  PREVIOUS 7 DAYS
+                </h3>
+                <div className="space-y-1">
+                  {categorizedAgentChats.previous7Days.map(renderAgentChatItem)}
+                </div>
+              </div>
+            )}
+            {categorizedAgentChats.previous30Days.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                  PREVIOUS 30 DAYS
+                </h3>
+                <div className="space-y-1">
+                  {categorizedAgentChats.previous30Days.map(renderAgentChatItem)}
+                </div>
+              </div>
+            )}
+            {categorizedAgentChats.older.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">OLDER</h3>
+                <div className="space-y-1">
+                  {categorizedAgentChats.older.map(renderAgentChatItem)}
+                </div>
+              </div>
+            )}
 
             {hasNextAgentPage && <div ref={agentLoadMoreRef} className="h-10 w-full" />}
 

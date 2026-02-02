@@ -34,13 +34,10 @@ export const useGetAgentConversationList = (
   });
 };
 
-export const useGetConversationSessionById = (
-  p0: { agent_id: string; session_id: string; project_key: string },
-  p1: { enabled: boolean },
-  payload: IAgentConversationByIdPayload
-) => {
+export const useGetAgentConversationSessionById = (payload: IAgentConversationByIdPayload) => {
   return useQuery({
     queryKey: ['agent-conversation', payload],
     queryFn: () => agentConversationService.getAgentConversationSessionById(payload),
+    enabled: !!payload.session_id && !!payload.agent_id,
   });
 };

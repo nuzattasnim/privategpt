@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +34,8 @@ export const OrgSwitcher = () => {
   const { t } = useTranslation();
   const { setTokens, accessToken, setSelectedOrgId, selectedOrgId } = useAuthStore();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const currentOrgId = useMemo(() => {
     if (selectedOrgId) return selectedOrgId;
@@ -91,7 +95,9 @@ export const OrgSwitcher = () => {
 
       setSelectedOrgId(orgId);
 
-      window.location.reload();
+      await queryClient.invalidateQueries();
+
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Failed to switch organization:', error);
       setIsSwitching(false);

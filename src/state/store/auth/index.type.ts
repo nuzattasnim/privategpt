@@ -16,4 +16,5 @@ export type AuthState = {
   setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   setUser: (user: User | null) => void;
   setSelectedOrgId: (orgId: string | null) => void;
+  reset: () => void;
 };

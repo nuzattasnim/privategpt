@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +16,6 @@ import { useAuthStore } from '@/state/store/auth';
 import { useToast } from '@/hooks/use-toast';
 import { HttpError } from '@/lib/https';
 import { useGetMultiOrgs } from '@/lib/api/hooks/use-multi-orgs';
-import { decodeJWT } from '@/lib/utils/decode-jwt-utils';
 import { Button } from '@/components/ui-kit/button';
 import {
   Tooltip,
@@ -32,17 +30,9 @@ export const OrgSwitcher = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const { t } = useTranslation();
-  const { setTokens, accessToken, setSelectedOrgId, selectedOrgId } = useAuthStore();
+  const { setTokens, selectedOrgId } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-
-  const currentOrgId = useMemo(() => {
-    if (selectedOrgId) return selectedOrgId;
-    if (!accessToken) return null;
-    const decoded = decodeJWT(accessToken);
-    return decoded?.org_id ?? null;
-  }, [accessToken, selectedOrgId]);
 
   const { data, isLoading } = useGetAccount();
   const { data: orgsData, isLoading: isLoadingOrgs } = useGetMultiOrgs({
@@ -60,15 +50,15 @@ export const OrgSwitcher = () => {
     (org) => org.isEnable && membershipOrgIds.includes(org.itemId)
   );
 
-  const selectedOrg = currentOrgId
-    ? enabledOrganizations.find((org) => org.itemId === currentOrgId)
+  const selectedOrg = selectedOrgId
+    ? enabledOrganizations.find((org) => org.itemId === selectedOrgId)
     : enabledOrganizations[0];
 
   const currentOrgRoles = useMemo(() => {
-    if (!data?.memberships?.length || !currentOrgId) return [];
-    const membership = data.memberships.find((m) => m.organizationId === currentOrgId);
+    if (!data?.memberships?.length || !selectedOrgId) return [];
+    const membership = data.memberships.find((m) => m.organizationId === selectedOrgId);
     return membership?.roles ?? [];
-  }, [data, currentOrgId]);
+  }, [data, selectedOrgId]);
 
   const translatedRoles = currentOrgRoles
     .map((role: string) => {
@@ -78,7 +68,7 @@ export const OrgSwitcher = () => {
     .join(', ');
 
   const handleOrgSelect = async (orgId: string) => {
-    if (isSwitching || orgId === currentOrgId) {
+    if (isSwitching || orgId === selectedOrgId) {
       return;
     }
 
@@ -93,11 +83,17 @@ export const OrgSwitcher = () => {
         refreshToken: (response.refresh_token || useAuthStore.getState().refreshToken) ?? '',
       });
 
-      setSelectedOrgId(orgId);
+      await queryClient.invalidateQueries({
+        queryKey: ['getAccount'],
+      });
 
-      await queryClient.invalidateQueries();
+      setIsSwitching(false);
 
-      navigate('/', { replace: true });
+      toast({
+        title: t('ORGANIZATION_SWITCHED'),
+
+        description: t('SUCCESSFULLY_SWITCHED_ORGANIZATION'),
+      });
     } catch (error) {
       console.error('Failed to switch organization:', error);
       setIsSwitching(false);
@@ -197,7 +193,7 @@ export const OrgSwitcher = () => {
                 .map((role: string) => t(role.toUpperCase()))
                 .join(', ');
 
-              const isSelected = org.itemId === currentOrgId;
+              const isSelected = org.itemId === selectedOrgId;
 
               return (
                 <DropdownMenuItem

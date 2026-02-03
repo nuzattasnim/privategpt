@@ -208,11 +208,16 @@ export const handleSSEMessage = (
       : messageToStream;
     const streamContent = isJsonObject ? `:::json\n${formattedJson}\n:::` : String(message);
 
-    // Clear any existing skeleton (image or otherwise)
     startBotMessage(chatId, '');
 
-    // Don't show JSON skeleton if this response has images
-    // (images should be rendered separately, not as JSON)
+    const imageBlockRegex = /:::image\n[\s\S]*?\n:::/g;
+    if (imageBlockRegex.test(streamContent)) {
+      streamBotMessage(chatId, streamContent);
+      if (setSuggestions) setSuggestions(suggestions);
+      endBotMessage(chatId);
+      return;
+    }
+
     if (isJsonObject && !hasImages) {
       const skeleton = generateJsonSkeleton(JSON.parse(messageToStream));
       const skeletonContent = `:::json-skeleton\n${skeleton}\n:::`;
@@ -290,18 +295,32 @@ export const handleSSEMessage = (
         initiateBotMessage(chatId, '');
       }
 
+      let contentWithImages = data.message;
+
       if (hasImages) {
         startBotMessage(chatId, '');
 
-        let contentWithImages = data.message;
-
         data.images.forEach((img: any) => {
-          contentWithImages += `\n\n:::image\ndata:image/${img.format || 'png'};base64,${img.base64}\n:::`;
+          if (img.base64) {
+            contentWithImages += `\n\n:::image\ndata:image/${img.format || 'png'};base64,${img.base64}\n:::`;
+          } else if (img.url || img.image_url) {
+            const imageUrl = img.url || img.image_url;
+            contentWithImages += `\n\n:::image\n${imageUrl}\n:::`;
+          }
         });
 
         fakeStream(contentWithImages, data.next_step_questions || [], true);
       } else {
-        fakeStream(data.message, data.next_step_questions || [], false);
+        const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|webp)[^\s]*)/gi;
+        const urlMatches = contentWithImages.match(urlRegex);
+
+        if (urlMatches && urlMatches.length > 0) {
+          urlMatches.forEach((url: string) => {
+            contentWithImages = contentWithImages.replace(url, `\n\n:::image\n${url}\n:::`);
+          });
+        }
+
+        fakeStream(contentWithImages, data.next_step_questions || [], false);
       }
       break;
     }

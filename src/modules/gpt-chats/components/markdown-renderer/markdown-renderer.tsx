@@ -70,7 +70,7 @@ const JsonSkeletonBlock = ({ content }: { content: string }) => {
 
 const ImageSkeletonBlock = ({ content }: { content: string }) => {
   return (
-    <div className="my-4 w-full max-w-lg">
+    <div className="my-4 max-w-lg">
       <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
         <div className="aspect-square w-full relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
           <div
@@ -132,7 +132,7 @@ const ImageSkeletonBlock = ({ content }: { content: string }) => {
 };
 
 export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) => {
-  const jsonBlockRegex = /:::(json|json-skeleton|image-skeleton)\n([\s\S]*?)\n:::/g;
+  const jsonBlockRegex = /:::(json|json-skeleton|image-skeleton|image)\n([\s\S]*?)\n:::/g;
   const hasJsonBlock = jsonBlockRegex.test(content);
 
   if (hasJsonBlock) {

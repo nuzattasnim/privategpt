@@ -133,7 +133,7 @@ export const MarkdownComponentsMap: Partial<Components> = {
     };
 
     return (
-      <div className="max-w-full rounded-lg border  overflow-hidden ">
+      <div className="max-w-lg rounded-lg border  overflow-hidden ">
         <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-gray-200">
           <span className="text-sm text-high-emphasis font-medium truncate">{alt || 'Image'}</span>
           <button

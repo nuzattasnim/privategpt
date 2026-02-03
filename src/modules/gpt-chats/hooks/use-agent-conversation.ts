@@ -34,10 +34,13 @@ export const useGetAgentConversationList = (
   });
 };
 
-export const useGetAgentConversationSessionById = (payload: IAgentConversationByIdPayload) => {
+export const useGetAgentConversationSessionById = (
+  payload: IAgentConversationByIdPayload & { enabled?: boolean }
+) => {
+  const { enabled = true, ...queryPayload } = payload;
   return useQuery({
-    queryKey: ['agent-conversation', payload],
-    queryFn: () => agentConversationService.getAgentConversationSessionById(payload),
-    enabled: !!payload.session_id && !!payload.agent_id,
+    queryKey: ['agent-conversation', queryPayload],
+    queryFn: () => agentConversationService.getAgentConversationSessionById(queryPayload),
+    enabled: enabled && !!queryPayload.session_id && !!queryPayload.agent_id,
   });
 };

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import type { QueryClient } from '@tanstack/react-query';
 import { Conversation } from '../types/conversation.service.type';
 import { conversationService } from '../services/conversation.service';
 import { parseSSEBuffer } from '../utils/parse-sse';
@@ -73,7 +74,8 @@ interface ChatStore {
     message: string,
     model: SelectModelType,
     tools: string[],
-    navigate: NavigateFunction
+    navigate: NavigateFunction,
+    queryClient?: QueryClient
   ) => void;
   loadChat: (id: string, conversations: Conversation[]) => void;
   loadAgentChat: (
@@ -197,7 +199,7 @@ export const useChatStore = create<ChatStore>()(
         return chatId;
       },
 
-      startChat: (message, model, tools, navigate) => {
+      startChat: (message, model, tools, navigate, queryClient) => {
         const chatMessage: ChatMessage = {
           message,
           type: 'user',
@@ -293,8 +295,20 @@ export const useChatStore = create<ChatStore>()(
           delete updatedChats[chatId];
           set({ chats: updatedChats });
 
-          const newUrl = `/chat/${receivedSessionId}`;
+          // Include agent parameters in URL if it's an agent chat
+          const isAgentChat = currentChat.selectedModel?.provider === 'agents';
+          const newUrl = isAgentChat
+            ? `/chat/${receivedSessionId}?agent=${currentChat.selectedModel.model}&widget=${currentChat.selectedModel.widget_id}`
+            : `/chat/${receivedSessionId}`;
           window.history.replaceState(null, '', newUrl);
+
+          if (queryClient) {
+            if (isAgentChat) {
+              queryClient.refetchQueries({ queryKey: ['agent-conversation-list'] });
+            } else {
+              queryClient.refetchQueries({ queryKey: ['conversations'] });
+            }
+          }
         };
 
         return {};

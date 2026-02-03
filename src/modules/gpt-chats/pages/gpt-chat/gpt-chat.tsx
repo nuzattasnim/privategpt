@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 // import { Button } from '@/components/ui-kit/button';
 import { SelectModelType, useChatStore } from '@/modules/gpt-chats/hooks/use-chat-store';
+import { useQueryClient } from '@tanstack/react-query';
 // import {
 //   Sparkles,
 //   Compass,
@@ -159,6 +160,7 @@ export const GptChatPage = () => {
 
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const { startChat } = useChatStore();
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -169,7 +171,7 @@ export const GptChatPage = () => {
 
   const handleSendMessage = (message: string) => {
     if (message.trim()) {
-      startChat(message, selectModel, selectedTools, navigate);
+      startChat(message, selectModel, selectedTools, navigate, queryClient);
     }
   };
 

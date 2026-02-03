@@ -38,7 +38,9 @@ export const useChatSSE = ({ chatId = '', agentId = null, widgetId = null }: Use
   const isBotStreaming = chat.isBotStreaming || false;
   const isBotThinking = chat.isBotThinking || false;
   const currentEvent = chat?.currentEvent || null;
-  const isAgentChat = !!agentId;
+
+  // Determine if it's an agent chat from the store's selectedModel
+  const isAgentChat = chat?.selectedModel?.provider === 'agents' || !!agentId;
 
   const { data: modelChatData, isFetching: isFetchingModelChat } = useGetConversationById({
     allow_created_by_filter: true,
@@ -57,6 +59,7 @@ export const useChatSSE = ({ chatId = '', agentId = null, widgetId = null }: Use
       agent_id: agentId || '',
       limit: 100,
       offset: 0,
+      enabled: isAgentChat && activeChatId !== 'new',
     });
 
   const data = isAgentChat ? agentChatData : modelChatData;

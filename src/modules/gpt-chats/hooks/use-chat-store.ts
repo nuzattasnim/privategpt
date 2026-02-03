@@ -295,7 +295,6 @@ export const useChatStore = create<ChatStore>()(
           delete updatedChats[chatId];
           set({ chats: updatedChats });
 
-          // Include agent parameters in URL if it's an agent chat
           const isAgentChat = currentChat.selectedModel?.provider === 'agents';
           const newUrl = isAgentChat
             ? `/chat/${receivedSessionId}?agent=${currentChat.selectedModel.model}&widget=${currentChat.selectedModel.widget_id}`

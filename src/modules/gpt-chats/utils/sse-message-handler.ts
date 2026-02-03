@@ -137,6 +137,28 @@ export const handleSSEMessage = (
 
   const normalizedType = data.type.toLowerCase().replace(/_/g, '_');
 
+  if (normalizedType === 'task_progress' && data.task_action === 'generate_image') {
+    const imageSkeletonContent = `:::image-skeleton\nGenerating image...\n:::`;
+    setCurrentEvent(chatId, data.type, 'Generating image');
+    setBotThinking(chatId, true);
+
+    const currentChat = useChatStore.getState().chats[chatId];
+    const lastConversation = currentChat?.conversations?.[currentChat.conversations.length - 1];
+
+    const skeletonAlreadyShown =
+      lastConversation?.type === 'bot' && lastConversation?.message?.includes(':::image-skeleton');
+
+    if (!skeletonAlreadyShown) {
+      if (!currentChat?.conversations?.length || lastConversation?.type !== 'bot') {
+        initiateBotMessage(chatId, imageSkeletonContent);
+      } else {
+        startBotMessage(chatId, imageSkeletonContent);
+      }
+    }
+
+    return;
+  }
+
   if (eventTypes.includes(normalizedType) || normalizedType.startsWith('node_start')) {
     const eventMessage = getRandomEventMessage(data.type);
     setCurrentEvent(chatId, data.type, eventMessage);
@@ -144,7 +166,11 @@ export const handleSSEMessage = (
     return;
   }
 
-  const fakeStream = (fullMessage: string | object, next_step_questions: string[] = []) => {
+  const fakeStream = (
+    fullMessage: string | object,
+    next_step_questions: string[] = [],
+    hasImages = false
+  ) => {
     const chunkSize = 5;
     let index = 0;
     let timeoutId: NodeJS.Timeout;
@@ -182,9 +208,12 @@ export const handleSSEMessage = (
       : messageToStream;
     const streamContent = isJsonObject ? `:::json\n${formattedJson}\n:::` : String(message);
 
+    // Clear any existing skeleton (image or otherwise)
     startBotMessage(chatId, '');
 
-    if (isJsonObject) {
+    // Don't show JSON skeleton if this response has images
+    // (images should be rendered separately, not as JSON)
+    if (isJsonObject && !hasImages) {
       const skeleton = generateJsonSkeleton(JSON.parse(messageToStream));
       const skeletonContent = `:::json-skeleton\n${skeleton}\n:::`;
       streamBotMessage(chatId, skeletonContent);
@@ -234,33 +263,65 @@ export const handleSSEMessage = (
   };
 
   switch (data.type) {
-    case 'start':
+    case 'start': {
       setSessionId(chatId, data.session_id);
       break;
-    case 'typing':
-      break;
+    }
 
-    case 'message_start':
+    case 'typing': {
       break;
+    }
 
-    case 'chat_response':
+    case 'message_start': {
+      break;
+    }
+
+    case 'chat_response': {
       setCurrentEvent(chatId, null, '');
-      initiateBotMessage(chatId, data.message);
-      fakeStream(data.message, data.next_step_questions || []);
-      break;
 
-    case 'error':
+      const hasImages = data.images && Array.isArray(data.images) && data.images.length > 0;
+
+      const currentChat = useChatStore.getState().chats[chatId];
+      const hasExistingBotMessage =
+        currentChat?.conversations?.length > 0 &&
+        currentChat.conversations[currentChat.conversations.length - 1]?.type === 'bot';
+
+      if (!hasExistingBotMessage) {
+        initiateBotMessage(chatId, '');
+      }
+
+      if (hasImages) {
+        startBotMessage(chatId, '');
+
+        let contentWithImages = data.message;
+
+        data.images.forEach((img: any) => {
+          contentWithImages += `\n\n:::image\ndata:image/${img.format || 'png'};base64,${img.base64}\n:::`;
+        });
+
+        fakeStream(contentWithImages, data.next_step_questions || [], true);
+      } else {
+        fakeStream(data.message, data.next_step_questions || [], false);
+      }
+      break;
+    }
+
+    case 'error': {
       setCurrentEvent(chatId, null, '');
       initiateBotMessage(chatId, data.message);
       setBotErrorMessage(chatId, data.message);
       endBotMessage(chatId);
       break;
+    }
 
     case 'message_end':
-    case 'workflow_end':
+    case 'workflow_end': {
       setCurrentEvent(chatId, null, '');
       setBotThinking(chatId, false);
       break;
+    }
+
     default:
+      break;
   }
 };

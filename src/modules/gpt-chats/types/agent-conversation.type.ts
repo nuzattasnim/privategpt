@@ -99,7 +99,8 @@ export interface IAgentConversationInitiateResponse {
 }
 
 export interface IAgentConversationListPayload {
-  agent_id?: string;
+  allow_created_by_filter?: boolean;
+  agent_id: string;
   project_key: string;
   limit: number;
   offset: number;

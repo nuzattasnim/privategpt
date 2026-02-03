@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { MarkdownComponentsMap } from './markdown-components-map';
+import { Download } from 'lucide-react';
 
 type MarkdownRendererProps = {
   content: string;
@@ -68,11 +69,25 @@ const JsonSkeletonBlock = ({ content }: { content: string }) => {
   );
 };
 
-const ImageSkeletonBlock = ({ content }: { content: string }) => {
+const ImageSkeletonBlock = () => {
   return (
-    <div className="my-4 max-w-lg">
-      <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-        <div className="aspect-square w-full relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+    <div className="max-w-lg rounded-lg border overflow-hidden">
+      <div className="flex items-center justify-between  px-4 py-2 bg-card border-b border-gray-200">
+        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <div className="sm:w-60"></div>
+
+        <button
+          disabled
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs bg-white border border-gray-300 opacity-50 cursor-not-allowed ml-2 flex-shrink-0"
+          title="Download image"
+        >
+          <Download className="h-3.5 w-3.5 text-gray-400" />
+          <span className="text-gray-400">Download</span>
+        </button>
+      </div>
+
+      <div className="bg-white">
+        <div className="w-full max-w-lg  h-[512px] relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -82,42 +97,6 @@ const ImageSkeletonBlock = ({ content }: { content: string }) => {
               animation: 'shimmer 2s infinite linear',
             }}
           />
-
-          <div className="absolute inset-0 flex items-center justify-center">
-            <svg
-              className="w-16 h-16 text-gray-400 dark:text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">{content}</span>
-            <div className="flex space-x-1">
-              <div
-                className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"
-                style={{ animationDelay: '0s' }}
-              ></div>
-              <div
-                className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"
-                style={{ animationDelay: '0.2s' }}
-              ></div>
-              <div
-                className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"
-                style={{ animationDelay: '0.4s' }}
-              ></div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -162,9 +141,7 @@ export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererPr
       }
 
       if (blockType === 'image-skeleton') {
-        parts.push(
-          <ImageSkeletonBlock key={`image-skeleton-${match.index}`} content={blockContent} />
-        );
+        parts.push(<ImageSkeletonBlock key={`image-skeleton-${match.index}`} />);
       } else {
         parts.push(<JsonSkeletonBlock key={`skeleton-${match.index}`} content={blockContent} />);
       }

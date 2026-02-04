@@ -139,7 +139,7 @@ export const handleSSEMessage = (
 
   if (normalizedType === 'task_progress' && data.task_action === 'generate_image') {
     const imageSkeletonContent = `:::image-skeleton\nGenerating image...\n:::`;
-    setCurrentEvent(chatId, data.type, 'Generating image');
+    setCurrentEvent(chatId, null, '');
     setBotThinking(chatId, true);
 
     const currentChat = useChatStore.getState().chats[chatId];
@@ -160,9 +160,19 @@ export const handleSSEMessage = (
   }
 
   if (eventTypes.includes(normalizedType) || normalizedType.startsWith('node_start')) {
-    const eventMessage = getRandomEventMessage(data.type);
-    setCurrentEvent(chatId, data.type, eventMessage);
-    setBotThinking(chatId, true);
+    const currentChat = useChatStore.getState().chats[chatId];
+    const lastConversation = currentChat?.conversations?.[currentChat.conversations.length - 1];
+    
+    const hasImageSkeleton =
+      lastConversation?.type === 'bot' && lastConversation?.message?.includes(':::image-skeleton');
+    
+    if (!hasImageSkeleton) {
+      const eventMessage = getRandomEventMessage(data.type);
+      setCurrentEvent(chatId, data.type, eventMessage);
+      setBotThinking(chatId, true);
+    } else {
+      setCurrentEvent(chatId, null, '');
+    }
     return;
   }
 

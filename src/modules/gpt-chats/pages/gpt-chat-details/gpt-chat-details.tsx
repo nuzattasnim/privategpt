@@ -292,15 +292,28 @@ export const GptChatPageDetails = () => {
               </div>
             ))}
 
-            {isBotThinking && (
-              <div key="thinking-indicator" className="animate-in fade-in duration-700 ease-in-out">
-                {currentEvent ? (
-                  <ChatEventMessageIndicator message={currentEvent.message} />
-                ) : (
-                  <ThinkingIndicator />
-                )}
-              </div>
-            )}
+            {isBotThinking &&
+              (() => {
+                const lastConversation = conversations[conversations.length - 1];
+                const hasImageSkeleton =
+                  lastConversation?.type === 'bot' &&
+                  lastConversation?.message?.includes(':::image-skeleton');
+
+                if (hasImageSkeleton) return null;
+
+                return (
+                  <div
+                    key="thinking-indicator"
+                    className="animate-in fade-in duration-700 ease-in-out"
+                  >
+                    {currentEvent ? (
+                      <ChatEventMessageIndicator message={currentEvent.message} />
+                    ) : (
+                      <ThinkingIndicator />
+                    )}
+                  </div>
+                );
+              })()}
 
             <div ref={messagesEndRef} />
           </div>

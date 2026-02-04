@@ -69,10 +69,12 @@ const JsonSkeletonBlock = ({ content }: { content: string }) => {
   );
 };
 
+import { ImageIcon } from 'lucide-react';
+
 const ImageSkeletonBlock = () => {
   return (
     <div className="max-w-lg rounded-lg border overflow-hidden">
-      <div className="flex items-center justify-between  px-4 py-2 bg-card border-b border-gray-200">
+      <div className="flex items-center justify-between px-4 py-2 bg-card ">
         <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         <div className="sm:w-60"></div>
 
@@ -87,7 +89,7 @@ const ImageSkeletonBlock = () => {
       </div>
 
       <div className="bg-white">
-        <div className="w-full max-w-lg  h-[512px] relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+        <div className="w-full max-w-lg h-[512px] relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -97,6 +99,35 @@ const ImageSkeletonBlock = () => {
               animation: 'shimmer 2s infinite linear',
             }}
           />
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+            <div className="relative">
+              <ImageIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
+              {/* <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-gray-400/20 dark:bg-gray-500/20 animate-ping" />
+              </div> */}
+            </div>
+
+            <div className="flex mt-1 items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Generating image
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '0s', animationDuration: '1s' }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '0.2s', animationDuration: '1s' }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '0.4s', animationDuration: '1s' }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

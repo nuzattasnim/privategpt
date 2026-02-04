@@ -7,7 +7,7 @@ import { useGetLoginOptions } from '@/modules/auth/hooks/use-auth';
 import { useAuthState } from '@/state/client-middleware';
 import { useTheme } from '@/styles/theme/theme-provider';
 import { LanguageSelector } from '@/components/core';
-import bgAuthArtwork from '@/assets/images/bg_auth_artwork.png';
+import { GeometricAnimation } from '@/components/ui-kit/geometric-animation';
 
 export const AuthLayout = () => {
   const { isLoading, error: loginOptionsError } = useGetLoginOptions();
@@ -24,15 +24,6 @@ export const AuthLayout = () => {
   }, [isAuthenticated, navigate]);
 
   if (!isMounted) return null;
-
-  const getBackgroundImage = () => {
-    if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? bgAuthArtwork
-        : bgAuthArtwork;
-    }
-    return theme === 'dark' ? bgAuthArtwork : bgAuthArtwork;
-  };
 
   const is404Error = (error: any) => {
     return (
@@ -150,13 +141,8 @@ export const AuthLayout = () => {
   return (
     <div className="flex w-full flex-col h-screen">
       <div className="flex w-full min-h-screen relative">
-        <div className="hidden md:block w-[36%] relative bg-primary-50">
-          <img
-            src={getBackgroundImage()}
-            alt="bg auth"
-            className="w-full h-full object-cover"
-            key={theme ?? 'default'}
-          />
+        <div className="hidden md:block w-[36%] relative bg-primary-50 dark:bg-zinc-800">
+          <GeometricAnimation />
         </div>
         <div className="flex items-center justify-center w-full px-6 sm:px-20 md:w-[64%] md:px-[14%] lg:px-[16%] 2xl:px-[20%]">
           <div className="absolute top-2 right-4 flex items-center gap-2">

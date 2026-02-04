@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
+import { Building2, Check, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -226,12 +226,6 @@ export const OrgSwitcher = () => {
             </DropdownMenuItem>
           )}
         </div>
-
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled className="text-xs cursor-not-allowed">
-          <Plus className="h-3.5 w-3.5 mr-2" />
-          {t('CREATE_NEW')}
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -252,7 +252,7 @@ export const GptChatPage = () => {
           onModelChange={setSelectedModel}
           selectedTools={selectedTools}
           onToolsChange={setSelectedTools}
-          className=" static w-full md:m-0"
+          className="static w-full max-w-4xl ml-0 md:ml-0 lg:ml-0 xl:ml-0"
         />
       </div>
     </div>

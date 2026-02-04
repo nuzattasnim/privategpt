@@ -162,10 +162,10 @@ export const handleSSEMessage = (
   if (eventTypes.includes(normalizedType) || normalizedType.startsWith('node_start')) {
     const currentChat = useChatStore.getState().chats[chatId];
     const lastConversation = currentChat?.conversations?.[currentChat.conversations.length - 1];
-    
+
     const hasImageSkeleton =
       lastConversation?.type === 'bot' && lastConversation?.message?.includes(':::image-skeleton');
-    
+
     if (!hasImageSkeleton) {
       const eventMessage = getRandomEventMessage(data.type);
       setCurrentEvent(chatId, data.type, eventMessage);
@@ -297,36 +297,53 @@ export const handleSSEMessage = (
       const hasImages = data.images && Array.isArray(data.images) && data.images.length > 0;
 
       const currentChat = useChatStore.getState().chats[chatId];
-      const hasExistingBotMessage =
-        currentChat?.conversations?.length > 0 &&
-        currentChat.conversations[currentChat.conversations.length - 1]?.type === 'bot';
+      const lastConversation = currentChat?.conversations?.[currentChat.conversations.length - 1];
 
-      if (!hasExistingBotMessage) {
-        initiateBotMessage(chatId, '');
-      }
+      const hasExistingBotMessage =
+        currentChat?.conversations?.length > 0 && lastConversation?.type === 'bot';
 
       let contentWithImages = data.message;
 
       if (hasImages) {
-        startBotMessage(chatId, '');
+        contentWithImages = contentWithImages.replace(/!\[.*?\]\(.*?\)/g, '').trim();
 
-        data.images.forEach((img: any) => {
+        const urlPattern = /(https?:\/\/[^\s]+)/g;
+        contentWithImages = contentWithImages.replace(urlPattern, '').trim();
+
+        contentWithImages = contentWithImages.replace(/Here's your image:?/gi, '').trim();
+        contentWithImages = contentWithImages.replace(/Image:?/gi, '').trim();
+
+        contentWithImages = contentWithImages.replace(/\n\s*\n/g, '\n').trim();
+
+        data.images.forEach((img: any, index: number) => {
+          const separator = contentWithImages ? '\n\n' : '';
           if (img.base64) {
-            contentWithImages += `\n\n:::image\ndata:image/${img.format || 'png'};base64,${img.base64}\n:::`;
+            contentWithImages += `${separator}![Generated Image ${index + 1}](data:image/${img.format || 'png'};base64,${img.base64})`;
           } else if (img.url || img.image_url) {
             const imageUrl = img.url || img.image_url;
-            contentWithImages += `\n\n:::image\n${imageUrl}\n:::`;
+            contentWithImages += `${separator}![Generated Image ${index + 1}](${imageUrl})`;
           }
         });
 
-        fakeStream(contentWithImages, data.next_step_questions || [], true);
+        if (!hasExistingBotMessage) {
+          initiateBotMessage(chatId, '');
+        } else {
+          startBotMessage(chatId, '');
+        }
+        streamBotMessage(chatId, contentWithImages);
+        if (setSuggestions) setSuggestions(data.next_step_questions || []);
+        endBotMessage(chatId);
       } else {
+        if (!hasExistingBotMessage) {
+          initiateBotMessage(chatId, '');
+        }
+
         const urlRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|webp)[^\s]*)/gi;
         const urlMatches = contentWithImages.match(urlRegex);
 
         if (urlMatches && urlMatches.length > 0) {
           urlMatches.forEach((url: string) => {
-            contentWithImages = contentWithImages.replace(url, `\n\n:::image\n${url}\n:::`);
+            contentWithImages = contentWithImages.replace(url, `\n\n![Image](${url})`);
           });
         }
 

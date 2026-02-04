@@ -34,12 +34,16 @@ export const useGetConversations = (
   });
 };
 
-export const useGetConversationById = (payload: IConversationByIdPayload) => {
+export const useGetConversationById = (
+  payload: IConversationByIdPayload & { enabled?: boolean }
+) => {
+  const { enabled = true, ...queryPayload } = payload;
   return useQuery({
-    queryKey: ['conversation', payload],
-    queryFn: () => conversationService.getConversationSessionById(payload),
+    queryKey: ['conversation', queryPayload],
+    queryFn: () => conversationService.getConversationSessionById(queryPayload),
     refetchOnMount: true,
     staleTime: 0,
+    enabled,
   });
 };
 

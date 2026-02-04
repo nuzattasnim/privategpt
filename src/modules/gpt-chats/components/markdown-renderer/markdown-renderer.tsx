@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { MarkdownComponentsMap } from './markdown-components-map';
+import { Download } from 'lucide-react';
 
 type MarkdownRendererProps = {
   content: string;
@@ -68,8 +69,49 @@ const JsonSkeletonBlock = ({ content }: { content: string }) => {
   );
 };
 
+const ImageSkeletonBlock = () => {
+  return (
+    <div className="max-w-lg rounded-lg border overflow-hidden">
+      <div className="flex items-center justify-between  px-4 py-2 bg-card border-b border-gray-200">
+        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <div className="sm:w-60"></div>
+
+        <button
+          disabled
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs bg-white border border-gray-300 opacity-50 cursor-not-allowed ml-2 flex-shrink-0"
+          title="Download image"
+        >
+          <Download className="h-3.5 w-3.5 text-gray-400" />
+          <span className="text-gray-400">Download</span>
+        </button>
+      </div>
+
+      <div className="bg-white">
+        <div className="w-full max-w-lg  h-[512px] relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+              backgroundSize: '200% 100%',
+              animation: 'shimmer 2s infinite linear',
+            }}
+          />
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) => {
-  const jsonBlockRegex = /:::(json|json-skeleton)\n([\s\S]*?)\n:::/g;
+  const jsonBlockRegex = /:::(json|json-skeleton|image-skeleton|image)\n([\s\S]*?)\n:::/g;
   const hasJsonBlock = jsonBlockRegex.test(content);
 
   if (hasJsonBlock) {
@@ -80,7 +122,7 @@ export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererPr
     jsonBlockRegex.lastIndex = 0;
 
     while ((match = jsonBlockRegex.exec(content)) !== null) {
-      // const blockType = match[1];
+      const blockType = match[1];
       const blockContent = match[2];
 
       if (match.index > lastIndex) {
@@ -98,11 +140,11 @@ export const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererPr
         }
       }
 
-      // if (blockType === 'json-skeleton') {
-      parts.push(<JsonSkeletonBlock key={`skeleton-${match.index}`} content={blockContent} />);
-      // } else {
-      //   parts.push(<JsonMonacoBlock key={`json-${match.index}`} content={blockContent} />);
-      // }
+      if (blockType === 'image-skeleton') {
+        parts.push(<ImageSkeletonBlock key={`image-skeleton-${match.index}`} />);
+      } else {
+        parts.push(<JsonSkeletonBlock key={`skeleton-${match.index}`} content={blockContent} />);
+      }
 
       lastIndex = match.index + match[0].length;
     }

@@ -162,7 +162,7 @@ export const GeometricAnimation = ({ className = '' }: GeometricAnimationProps) 
 
   return (
     <div
-      className={`relative w-full h-full overflow-hidden ${isDarkMode ? 'bg-zinc-700' : 'bg-sky-100'} ${className}`}
+      className={`relative w-full h-full overflow-hidden ${isDarkMode ? 'bg-zinc-700' : 'bg-neutral-50'} ${className}`}
     >
       <svg
         viewBox="0 0 400 900"

@@ -112,6 +112,7 @@ export interface IAgentConversationListResponse {
 }
 
 export interface IAgentConversationByIdPayload {
+  allow_created_by_filter: boolean;
   widget_id?: string;
   session_id: string;
   agent_id: string;

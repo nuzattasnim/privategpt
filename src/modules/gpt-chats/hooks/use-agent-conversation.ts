@@ -39,6 +39,7 @@ export const useGetAgentConversationSessionById = (
   payload: IAgentConversationByIdPayload & { enabled?: boolean }
 ) => {
   const { enabled = true, ...queryPayload } = payload;
+  queryPayload.allow_created_by_filter = true;
   return useQuery({
     queryKey: ['agent-conversation', queryPayload],
     queryFn: () => agentConversationService.getAgentConversationSessionById(queryPayload),

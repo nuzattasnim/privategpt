@@ -25,9 +25,16 @@ type GroupModel = {
 interface GroupedModelSelectorProps {
   value?: SelectModelType;
   onChange?: (value: SelectModelType) => void;
+  locked?: boolean;
+  isAgentChat?: boolean;
 }
 
-export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorProps) => {
+export const GroupedModelSelector = ({
+  value,
+  onChange,
+  locked = false,
+  isAgentChat = false,
+}: GroupedModelSelectorProps) => {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   const [selectedProvider, setSelectedProvider] = useState<GroupModel | null>(null);
@@ -90,7 +97,6 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
       });
     });
 
-    // Add agents as a provider
     if (agentsData?.agents && agentsData.agents.length > 0) {
       allModels['agents'] = {
         provider: 'agents',
@@ -109,10 +115,19 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
     return allModels;
   }, [customModels, blocksModels, agentsData]);
 
+  const filteredModels = useMemo(() => {
+    if (isAgentChat) return groupedModels;
+
+    const filtered = { ...groupedModels };
+    delete filtered['agents'];
+    return filtered;
+  }, [groupedModels, isAgentChat]);
+
   const handleOpenChange = (newOpen: boolean) => {
+    if (locked) return;
     setOpen(newOpen);
-    if (newOpen && !selectedProvider && Object.keys(groupedModels).length > 0) {
-      setSelectedProvider(groupedModels[Object.keys(groupedModels)[0]]);
+    if (newOpen && !selectedProvider && Object.keys(filteredModels).length > 0) {
+      setSelectedProvider(filteredModels[Object.keys(filteredModels)[0]]);
       setMobileView('providers');
     }
   };
@@ -187,7 +202,12 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[220px] h-11 justify-between bg-card/50 hover:bg-card border-border transition-all duration-200 rounded-xl px-3 group"
+          disabled={locked}
+          className={cn(
+            'w-[220px] h-11 justify-between bg-card/50 border-border transition-all duration-200 rounded-xl px-3 group',
+            !locked && 'hover:bg-card',
+            locked && 'cursor-not-allowed opacity-70'
+          )}
         >
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <div
@@ -236,12 +256,12 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
 
             <div className="flex-1 overflow-y-auto">
               <div className="p-2 space-y-1">
-                {Object.values(groupedModels).length === 0 ? (
+                {Object.values(filteredModels).length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
                     No providers available
                   </div>
                 ) : (
-                  Object.values(groupedModels).map((group) => {
+                  Object.values(filteredModels).map((group) => {
                     const groupConfig = getProviderConfig(group.provider);
                     const GroupIcon = groupConfig.icon;
                     const isProviderSelected = selectedProvider?.provider === group.provider;
@@ -365,7 +385,7 @@ export const GroupedModelSelector = ({ value, onChange }: GroupedModelSelectorPr
                 <div className="text-center space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Select a provider</p>
                   <p className="text-xs text-muted-foreground/60">
-                    Choose from the {Object.keys(groupedModels).length} providers available
+                    Choose from the {Object.keys(filteredModels).length} providers available
                   </p>
                 </div>
               </div>

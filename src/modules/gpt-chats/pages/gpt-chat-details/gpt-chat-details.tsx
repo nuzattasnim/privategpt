@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui-kit/button';
 import { Clipboard, Check, Zap } from 'lucide-react';
 import {
@@ -83,6 +83,9 @@ const ChatEventMessageIndicator = ({ message }: { message: string }) => (
 
 export const GptChatPageDetails = () => {
   const { chatId } = useParams();
+  const [searchParams] = useSearchParams();
+  const agentId = searchParams.get('agent');
+  const widgetId = searchParams.get('widget');
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data } = useGetAccount();
@@ -100,6 +103,8 @@ export const GptChatPageDetails = () => {
     currentEvent,
   } = useChatSSE({
     chatId,
+    agentId,
+    widgetId,
   });
 
   // useEffect(() => {
@@ -287,15 +292,28 @@ export const GptChatPageDetails = () => {
               </div>
             ))}
 
-            {isBotThinking && (
-              <div key="thinking-indicator" className="animate-in fade-in duration-700 ease-in-out">
-                {currentEvent ? (
-                  <ChatEventMessageIndicator message={currentEvent.message} />
-                ) : (
-                  <ThinkingIndicator />
-                )}
-              </div>
-            )}
+            {isBotThinking &&
+              (() => {
+                const lastConversation = conversations[conversations.length - 1];
+                const hasImageSkeleton =
+                  lastConversation?.type === 'bot' &&
+                  lastConversation?.message?.includes(':::image-skeleton');
+
+                if (hasImageSkeleton) return null;
+
+                return (
+                  <div
+                    key="thinking-indicator"
+                    className="animate-in fade-in duration-700 ease-in-out"
+                  >
+                    {currentEvent ? (
+                      <ChatEventMessageIndicator message={currentEvent.message} />
+                    ) : (
+                      <ThinkingIndicator />
+                    )}
+                  </div>
+                );
+              })()}
 
             <div ref={messagesEndRef} />
           </div>

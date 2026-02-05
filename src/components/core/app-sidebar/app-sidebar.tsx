@@ -6,6 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import { getSidebarStyle } from '@/lib/utils/sidebar-utils';
 import { LogoSection } from '@/components/core';
 import { ConfirmationModal } from '@/components/core/confirmation-modal/confirmation-modal';
+import { menuItems } from '@/constant/sidebar-menu';
+import { MenuIcon } from '@/components/core/menu-icon/menu-icon';
+import { useFilteredMenu } from '@/hooks/use-filtered-menu';
 import {
   Accordion,
   AccordionContent,
@@ -23,12 +26,12 @@ import {
   Copy,
   Archive,
   Loader,
+  Bot,
 } from 'lucide-react';
 import {
   useDeleteConversationById,
   useGetConversations,
 } from '@/modules/gpt-chats/hooks/use-conversation-api';
-import { useGetAgentConversationList } from '@/modules/gpt-chats/hooks/use-agent-conversation';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -37,6 +40,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui-kit/dropdown-menu';
 import { useCategorizedChatHistories } from '@/modules/gpt-chats/hooks/use-chat-history-categories';
+import { useGetAgents } from '@/modules/gpt-chats/hooks/use-agents';
+import { AgentChatAccordion } from '@/modules/gpt-chats/components/agent-chat/agent-chat-accordion';
+import { cn } from '@/lib/utils';
 
 const projectKey = import.meta.env.VITE_X_BLOCKS_KEY || '';
 const projectSlug = import.meta.env.VITE_PROJECT_SLUG || '';
@@ -53,12 +59,11 @@ export const AppSidebar = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const filteredMenuItems = useFilteredMenu(menuItems);
+
   const accordionContentRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const chatListContainerRef = useRef<HTMLDivElement>(null);
-  const agentAccordionContentRef = useRef<HTMLDivElement>(null);
-  const agentLoadMoreRef = useRef<HTMLDivElement>(null);
-  const agentChatListContainerRef = useRef<HTMLDivElement>(null);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetConversations({
     allow_created_by_filter: true,
@@ -66,13 +71,9 @@ export const AppSidebar = () => {
     project_key: projectKey,
   });
 
-  const {
-    data: agentConversationsData,
-    fetchNextPage: fetchNextAgentPage,
-    hasNextPage: hasNextAgentPage,
-    isFetchingNextPage: isFetchingNextAgentPage,
-  } = useGetAgentConversationList({
-    agent_id: 'def5605d-501a-4d6f-a403-fcb2c5bdd9cc',
+  const { data: agentsData } = useGetAgents({
+    limit: 100,
+    offset: 0,
     project_key: projectKey,
   });
 
@@ -113,42 +114,7 @@ export const AppSidebar = () => {
     return allChats;
   }, [data?.pages]);
 
-  const agentChatList = useMemo(() => {
-    if (!agentConversationsData?.pages) {
-      return [];
-    }
-
-    const seenIds = new Set<string>();
-    const allAgentChats = agentConversationsData.pages.flatMap((page) => {
-      const filtered = page.sessions.filter((session: any) => {
-        const sessionId = session.session_id;
-        if (!sessionId) {
-          return false;
-        }
-        if (seenIds.has(sessionId)) {
-          return false;
-        }
-        seenIds.add(sessionId);
-        return true;
-      });
-
-      const mapped = filtered.map((session: any) => ({
-        id: session.session_id,
-        lastEntryDate: session.last_entry_date,
-        title:
-          session.conversation?.Title?.slice(0, 35) ||
-          session.conversation?.Response?.slice(0, 35) ||
-          session.conversation?.Query ||
-          'Untitled Agent Chat',
-      }));
-      return mapped;
-    });
-
-    return allAgentChats;
-  }, [agentConversationsData?.pages]);
-
   const categorizedChats = useCategorizedChatHistories(chatList);
-  const categorizedAgentChats = useCategorizedChatHistories(agentChatList);
 
   useEffect(() => {
     if (isMobile && !openMobile) {
@@ -258,123 +224,6 @@ export const AppSidebar = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, isMobile, openMobile]);
 
-  // Intersection Observer for agent chats
-  useEffect(() => {
-    if (isMobile && !openMobile) {
-      return;
-    }
-
-    const setupAgentObserver = () => {
-      const currentLoadMoreRef = agentLoadMoreRef.current;
-      const scrollContainer = agentChatListContainerRef.current;
-
-      if (!currentLoadMoreRef || !scrollContainer) {
-        return null;
-      }
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && hasNextAgentPage && !isFetchingNextAgentPage) {
-              fetchNextAgentPage();
-            }
-          });
-        },
-        {
-          root: scrollContainer,
-          rootMargin: '200px',
-          threshold: 0.1,
-        }
-      );
-
-      observer.observe(currentLoadMoreRef);
-      return observer;
-    };
-
-    let observer = setupAgentObserver();
-    const timeouts: NodeJS.Timeout[] = [];
-
-    if (!observer) {
-      const delays = isMobile ? [100, 300, 500, 1000] : [100, 300];
-      delays.forEach((delay) => {
-        const timeout = setTimeout(() => {
-          if (!observer) {
-            observer = setupAgentObserver();
-          }
-        }, delay);
-        timeouts.push(timeout);
-      });
-    }
-
-    return () => {
-      if (observer) {
-        observer.disconnect();
-      }
-      timeouts.forEach(clearTimeout);
-    };
-  }, [
-    hasNextAgentPage,
-    isFetchingNextAgentPage,
-    fetchNextAgentPage,
-    agentChatList.length,
-    isMobile,
-    openMobile,
-  ]);
-
-  // Scroll listener for agent chats
-  useEffect(() => {
-    if (isMobile && !openMobile) {
-      return;
-    }
-
-    const setupAgentScrollListener = () => {
-      const scrollContainer = agentChatListContainerRef.current;
-
-      if (!scrollContainer) {
-        return null;
-      }
-
-      const handleScroll = () => {
-        const scrollTop = scrollContainer.scrollTop;
-        const scrollHeight = scrollContainer.scrollHeight;
-        const clientHeight = scrollContainer.clientHeight;
-        const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-
-        if (scrollPercentage > 0.75 && hasNextAgentPage && !isFetchingNextAgentPage) {
-          fetchNextAgentPage();
-        }
-      };
-
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-
-      return () => {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      };
-    };
-
-    let cleanup = setupAgentScrollListener();
-    const timeouts: NodeJS.Timeout[] = [];
-
-    if (!cleanup) {
-      const delays = isMobile ? [100, 300, 500, 1000] : [100, 300];
-      delays.forEach((delay) => {
-        const timeout = setTimeout(() => {
-          if (!cleanup) {
-            cleanup = setupAgentScrollListener();
-          }
-        }, delay);
-        timeouts.push(timeout);
-      });
-    }
-
-    return () => {
-      if (cleanup) {
-        cleanup();
-      }
-      timeouts.forEach(clearTimeout);
-    };
-  }, [hasNextAgentPage, isFetchingNextAgentPage, fetchNextAgentPage, isMobile, openMobile]);
-
   const handleNewChat = () => {
     navigate('/chat');
   };
@@ -447,9 +296,7 @@ export const AppSidebar = () => {
           <DropdownMenuItem
             disabled
             className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Share2 className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">{t('SHARE')}</span>
@@ -458,9 +305,7 @@ export const AppSidebar = () => {
           <DropdownMenuItem
             disabled
             className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Download className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">{t('DOWNLOAD')}</span>
@@ -469,9 +314,7 @@ export const AppSidebar = () => {
           <DropdownMenuItem
             disabled
             className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Pencil className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">{t('RENAME')}</span>
@@ -480,9 +323,7 @@ export const AppSidebar = () => {
           <DropdownMenuItem
             disabled
             className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Copy className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">{t('CLONE')}</span>
@@ -491,9 +332,7 @@ export const AppSidebar = () => {
           <DropdownMenuItem
             disabled
             className="cursor-not-allowed opacity-50 px-3 py-1.5 rounded-md"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Archive className="w-4 h-4 mr-3" />
             <span className="text-sm font-medium">{t('ARCHIVE')}</span>
@@ -514,6 +353,19 @@ export const AppSidebar = () => {
     </div>
   );
 
+  const renderChatCategory = (chats: typeof chatList, categoryKey: string) => {
+    if (chats.length === 0) return null;
+
+    return (
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+          {t(categoryKey).toUpperCase()}
+        </h3>
+        <div className="space-y-1">{chats.map((chat) => renderChatItem(chat))}</div>
+      </div>
+    );
+  };
+
   if (isMobile && !openMobile) {
     return null;
   }
@@ -527,7 +379,7 @@ export const AppSidebar = () => {
         />
       )}
       <Sidebar
-        className={` h-full border-r border-border/50 w-full sm:w-auto ${isMobile ? 'mobile-sidebar' : ''}`}
+        className={`h-full border-r border-border/50 w-full sm:w-auto ${isMobile ? 'mobile-sidebar' : ''}`}
         collapsible={isMobile ? 'none' : 'icon'}
         style={sidebarStyle}
       >
@@ -540,193 +392,116 @@ export const AppSidebar = () => {
           />
         </SidebarHeader>
 
-        <SidebarContent className="text-base px-3 py-4 text-high-emphasis font-normal overflow-x-hidden">
-          <Button
-            onClick={handleNewChat}
-            variant="outline"
-            className="mt-2 mb-4 gap-2 justify-start bg-card"
-          >
-            <PenSquare className="h-4 w-4" />
-            <span>{t('NEW_CHAT')}</span>
-          </Button>
+        <SidebarContent className="text-base px-3 py-2 text-high-emphasis font-normal overflow-x-hidden">
+          <div className="mb-4 pb-4 border-b border-border/50">
+            <div>
+              {filteredMenuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  onClick={() => {
+                    navigate(item.path);
+                    if (isMobile) {
+                      setOpenMobile(false);
+                    }
+                  }}
+                  variant="ghost"
+                  className={` justify-start hover:bg-accent/50 mb-0 mt-4 px-3 w-full ${
+                    pathname === item.path ? 'bg-accent/50' : ''
+                  }`}
+                >
+                  {item.icon && <MenuIcon name={item.icon} className="h-5 w-5" />}
+                  <span className="font-normal">{t(item.name)}</span>
+                </Button>
+              ))}
+            </div>
+            <div>
+              <Button
+                onClick={handleNewChat}
+                variant="outline"
+                className={cn('w-full justify-center  px-4  h-auto mt-4')}
+              >
+                <PenSquare className="h-4 w-4 flex-shrink-0" />
+                <span>{t('NEW_CHAT')}</span>
+              </Button>
+            </div>
+          </div>
 
-          <Accordion type="multiple" defaultValue={['list', 'agent-chats']}>
-            {' '}
-            <AccordionItem value="list" className="border-none">
-              <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
-                <div className="flex items-center justify-between w-full pr-2">
-                  {/* <span>{t('YOUR_CHATS')}</span> */}
-                  <span>{t('CHATS_WITH_MODELS')}</span>
-
-                  <span className="text-xs text-muted-foreground font-normal">
-                    {chatList.length}
-                  </span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="overflow-visible" ref={accordionContentRef}>
-                {chatList.length === 0 ? (
-                  <p className="text-sm text-muted-foreground mt-2 px-2">
-                    {t('NO_CHATS_AVAILABLE')}
-                  </p>
-                ) : (
-                  <div
-                    ref={chatListContainerRef}
-                    className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
-                    style={{ maxHeight: 'calc(100vh - 280px)' }}
-                  >
-                    {categorizedChats.today.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('TODAY').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedChats.today.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedChats.yesterday.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('YESTERDAY').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedChats.yesterday.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedChats.previous7Days.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('PREVIOUS_7_DAYS').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedChats.previous7Days.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedChats.previous30Days.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('PREVIOUS_30_DAYS').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedChats.previous30Days.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedChats.older.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('OLDER').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedChats.older.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {hasNextPage && <div ref={loadMoreRef} className="h-20 w-full" />}
-
-                    {isFetchingNextPage && (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
-                      </div>
-                    )}
+          <div className="flex-1 overflow-hidden">
+            <Accordion
+              type="multiple"
+              defaultValue={['agent-chats', 'model-chats']}
+              className="space-y-2"
+            >
+              <AccordionItem value="agent-chats" className="border-none">
+                <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 py-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0 hover:bg-accent/30 rounded-md">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <span className="font-semibold text-sm">{t('CHATS_WITH_AGENTS')}</span>
                   </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="agent-chats" className="border-none">
-              <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0">
-                <div className="flex items-center justify-between w-full pr-2">
-                  <span>{t('CHATS_WITH_AGENTS')}</span>
-                  <span className="text-xs text-muted-foreground font-normal">
-                    {agentChatList.length}
-                  </span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="overflow-visible" ref={agentAccordionContentRef}>
-                {agentChatList.length === 0 ? (
-                  <p className="text-sm text-muted-foreground mt-2 px-2">
-                    {t('NO_CHATS_AVAILABLE')}
-                  </p>
-                ) : (
-                  <div
-                    ref={agentChatListContainerRef}
-                    className="overflow-y-auto overflow-x-visible pr-1 space-y-6 mt-2"
-                    style={{ maxHeight: 'calc(100vh - 280px)' }}
-                  >
-                    {categorizedAgentChats.today.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('TODAY').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedAgentChats.today.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
+                </AccordionTrigger>
+                <AccordionContent className="overflow-visible pb-1 pt-1">
+                  {!agentsData?.agents || agentsData.agents.length === 0 ? (
+                    <div className="text-center py-6 px-4">
+                      <Bot className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {t('NO_AGENTS_AVAILABLE')}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Create an agent to get started
+                      </p>
+                    </div>
+                  ) : (
+                    <Accordion type="multiple" className="space-y-1">
+                      {agentsData.agents.map((agent: any) => (
+                        <AgentChatAccordion
+                          key={agent.id}
+                          agent={agent}
+                          chatId={chatId}
+                          isMobile={isMobile}
+                          setOpenMobile={setOpenMobile}
+                        />
+                      ))}
+                    </Accordion>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
 
-                    {categorizedAgentChats.yesterday.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('YESTERDAY').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedAgentChats.yesterday.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedAgentChats.previous7Days.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('PREVIOUS_7_DAYS').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedAgentChats.previous7Days.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedAgentChats.previous30Days.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('PREVIOUS_30_DAYS').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedAgentChats.previous30Days.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {categorizedAgentChats.older.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-                          {t('OLDER').toUpperCase()}
-                        </h3>
-                        <div className="space-y-1">
-                          {categorizedAgentChats.older.map((chat) => renderChatItem(chat))}
-                        </div>
-                      </div>
-                    )}
-
-                    {hasNextAgentPage && <div ref={agentLoadMoreRef} className="h-20 w-full" />}
-
-                    {isFetchingNextAgentPage && (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
-                      </div>
-                    )}
+              {/* Chat with AI Models */}
+              <AccordionItem value="model-chats" className="border-none">
+                <AccordionTrigger className="hover:no-underline justify-start gap-1 px-2 py-2 [&[data-state=closed]>svg]:-rotate-90 [&[data-state=open]>svg]:rotate-0 hover:bg-accent/30 rounded-md">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <span className="font-semibold text-sm">{t('YOUR_CHATS')}</span>
                   </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                </AccordionTrigger>
+                <AccordionContent className="overflow-visible pb-1 pt-1" ref={accordionContentRef}>
+                  {chatList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-2 px-2">
+                      {t('NO_CHATS_AVAILABLE')}
+                    </p>
+                  ) : (
+                    <div
+                      ref={chatListContainerRef}
+                      className="overflow-y-auto overflow-x-visible pr-1 space-y-4"
+                      style={{ maxHeight: 'calc(100vh - 340px)' }}
+                    >
+                      {renderChatCategory(categorizedChats.today, 'TODAY')}
+                      {renderChatCategory(categorizedChats.yesterday, 'YESTERDAY')}
+                      {renderChatCategory(categorizedChats.previous7Days, 'PREVIOUS_7_DAYS')}
+                      {renderChatCategory(categorizedChats.previous30Days, 'PREVIOUS_30_DAYS')}
+                      {renderChatCategory(categorizedChats.older, 'OLDER')}
+
+                      {hasNextPage && <div ref={loadMoreRef} className="h-20 w-full" />}
+
+                      {isFetchingNextPage && (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         </SidebarContent>
       </Sidebar>
 

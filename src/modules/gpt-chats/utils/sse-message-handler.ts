@@ -331,11 +331,10 @@ export const handleSSEMessage = (
 
         const displayImage = () => {
           if (!hasExistingBotMessage) {
-            initiateBotMessage(chatId, '');
+            initiateBotMessage(chatId, contentWithImages);
           } else {
-            startBotMessage(chatId, '');
+            startBotMessage(chatId, contentWithImages);
           }
-          streamBotMessage(chatId, contentWithImages);
           if (setSuggestions) setSuggestions(data.next_step_questions || []);
           endBotMessage(chatId);
         };

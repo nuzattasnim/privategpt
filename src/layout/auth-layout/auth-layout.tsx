@@ -1,19 +1,20 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
-// import bgAuthLight from '@/assets/images/bg_auth_light.svg';
+import { AlertTriangle, Moon, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // import bgAuthLight from '@/assets/images/bg_auth_light.svg';
 // import bgAuthDark from '@/assets/images/bg_auth_dark.svg';
 import { useGetLoginOptions } from '@/modules/auth/hooks/use-auth';
 import { useAuthState } from '@/state/client-middleware';
 import { useTheme } from '@/styles/theme/theme-provider';
 import { LanguageSelector } from '@/components/core';
-import bgAuthArtwork from '@/assets/images/bg_auth_artwork.svg';
+import { GeometricAnimation } from '@/components/ui-kit/geometric-animation';
 
 export const AuthLayout = () => {
   const { isLoading, error: loginOptionsError } = useGetLoginOptions();
   const navigate = useNavigate();
   const { isMounted, isAuthenticated } = useAuthState();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Don't redirect if we're on the MFA verification page
@@ -24,39 +25,45 @@ export const AuthLayout = () => {
 
   if (!isMounted) return null;
 
-  const getBackgroundImage = () => {
-    if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? bgAuthArtwork
-        : bgAuthArtwork;
+  /** HTTP error structure for API responses */
+  interface HttpError {
+    message?: string;
+    status?: number;
+    response?: {
+      status?: number;
+    };
+  }
+
+  /** Checks for client configuration errors (403, 404, 406, 424) */
+  const isClientConfigError = (error: HttpError | null | undefined): boolean => {
+    if (!error) return false;
+    
+    const configErrorStatuses = [403, 404, 406, 424];
+    
+    // Check status from response or direct status
+    const status = error.response?.status ?? error.status;
+    if (status && configErrorStatuses.includes(status)) {
+      return true;
     }
-    return theme === 'dark' ? bgAuthArtwork : bgAuthArtwork;
+
+    // Check for HTTP status in message string
+    if (error.message) {
+      return configErrorStatuses.some((code) => error.message?.includes(`HTTP ${code}`));
+    }
+
+    return false;
   };
 
-  const is404Error = (error: any) => {
-    return (
-      error?.message?.includes('HTTP 404') ||
-      error?.message?.includes('HTTP 403') ||
-      error?.message?.includes('HTTP 406') ||
-      error?.message?.includes('HTTP 424') ||
-      error?.response?.status === 404 ||
-      error?.response?.status === 403 ||
-      error?.response?.status === 406 ||
-      error?.response?.status === 424 ||
-      error?.status === 404 ||
-      error?.status === 403 ||
-      error?.status === 406 ||
-      error?.status === 424
-    );
-  };
+  /** Checks for server errors (5xx status codes) */
+  const isServerError = (error: HttpError | null | undefined): boolean => {
+    if (!error) return false;
 
-  const is500Error = (error: any) => {
-    const status = error?.response?.status || error?.status;
+    const status = error.response?.status ?? error.status;
     if (status && status >= 500 && status < 600) {
       return true;
     }
 
-    if (error?.message) {
+    if (error.message) {
       const httpMatch = error.message.match(/HTTP (\d{3})/);
       if (httpMatch) {
         const statusFromMessage = parseInt(httpMatch[1], 10);
@@ -68,7 +75,7 @@ export const AuthLayout = () => {
   };
 
   const renderAuthContent = () => {
-    if (is404Error(loginOptionsError)) {
+    if (isClientConfigError(loginOptionsError)) {
       return (
         <div className="w-full max-w-xl mx-auto">
           <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100/50 p-8 shadow-xl">
@@ -111,7 +118,7 @@ export const AuthLayout = () => {
       );
     }
 
-    if (is500Error(loginOptionsError)) {
+    if (isServerError(loginOptionsError)) {
       return (
         <div className="w-full max-w-xl mx-auto">
           <div className="relative overflow-hidden rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100/50 p-8 shadow-xl">
@@ -149,16 +156,18 @@ export const AuthLayout = () => {
   return (
     <div className="flex w-full flex-col h-screen">
       <div className="flex w-full min-h-screen relative">
-        <div className="hidden md:block w-[36%] relative bg-primary-50">
-          <img
-            src={getBackgroundImage()}
-            alt="bg auth"
-            className="w-full h-full object-cover"
-            key={theme ?? 'default'}
-          />
+        <div className="hidden md:block w-[36%] relative bg-primary-50 dark:bg-zinc-800">
+          <GeometricAnimation />
         </div>
         <div className="flex items-center justify-center w-full px-6 sm:px-20 md:w-[64%] md:px-[14%] lg:px-[16%] 2xl:px-[20%]">
-          <div className="absolute top-2 right-4">
+          <div className="absolute top-2 right-4 flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-full transition-colors hover:bg-accent"
+              aria-label={t('THEME')}
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
             <LanguageSelector />
           </div>
           {renderAuthContent()}
